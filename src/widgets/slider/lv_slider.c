@@ -212,8 +212,10 @@ static void lv_slider_event(const lv_obj_class_t * class_p, lv_event_t * e)
                 /*Make the point relative to the indicator*/
                 new_value = p.x - (obj->coords.x1 + bg_left);
             }
-            new_value = (new_value * range) / indic_w;
-            new_value += slider->bar.min_value;
+            if(indic_w) {
+                new_value = (new_value * range + indic_w / 2) / indic_w;
+                new_value += slider->bar.min_value;
+            }
         }
         else {
             const lv_coord_t bg_top = lv_obj_get_style_pad_top(obj, LV_PART_MAIN);
@@ -223,7 +225,7 @@ static void lv_slider_event(const lv_obj_class_t * class_p, lv_event_t * e)
 
             /*Make the point relative to the indicator*/
             new_value = p.y - (obj->coords.y2 + bg_bottom);
-            new_value = (-new_value * range) / indic_h;
+            new_value = (-new_value * range + indic_h / 2) / indic_h;
             new_value += slider->bar.min_value;
         }
 

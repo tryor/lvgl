@@ -491,6 +491,20 @@
     #endif
 #endif
 
+/*Use GD32 IPA GPU
+ * This adds support for Image Processing Accelerator on GD32F450 and GD32F470 series MCUs
+ *
+ * NOTE: IPA on GD32F450 has a bug where the fill operation overwrites data beyond the
+ * framebuffer. This driver works around it by saving and restoring affected memory, but
+ * this makes it not thread-safe. GD32F470 is not affected. */
+#ifndef LV_USE_GPU_GD32_IPA
+    #ifdef CONFIG_LV_USE_GPU_GD32_IPA
+        #define LV_USE_GPU_GD32_IPA CONFIG_LV_USE_GPU_GD32_IPA
+    #else
+        #define LV_USE_GPU_GD32_IPA 0
+    #endif
+#endif
+
 /*Use NXP's PXP GPU iMX RTxxx platforms*/
 #ifndef LV_USE_GPU_NXP_PXP
     #ifdef CONFIG_LV_USE_GPU_NXP_PXP
@@ -581,6 +595,20 @@
             #define LV_LOG_PRINTF CONFIG_LV_LOG_PRINTF
         #else
             #define LV_LOG_PRINTF 0
+        #endif
+    #endif
+
+    /*1: Enable print timestamp;
+     *0: Disable print timestamp*/
+    #ifndef LV_LOG_USE_TIMESTAMP
+        #ifdef _LV_KCONFIG_PRESENT
+            #ifdef CONFIG_LV_LOG_USE_TIMESTAMP
+                #define LV_LOG_USE_TIMESTAMP CONFIG_LV_LOG_USE_TIMESTAMP
+            #else
+                #define LV_LOG_USE_TIMESTAMP 0
+            #endif
+        #else
+            #define LV_LOG_USE_TIMESTAMP 1
         #endif
     #endif
 
@@ -1257,7 +1285,7 @@
     #ifdef CONFIG_LV_TXT_BREAK_CHARS
         #define LV_TXT_BREAK_CHARS CONFIG_LV_TXT_BREAK_CHARS
     #else
-        #define LV_TXT_BREAK_CHARS " ,.;:-_"
+        #define LV_TXT_BREAK_CHARS " ,.;:-_)]}"
     #endif
 #endif
 
@@ -1681,15 +1709,6 @@
         #endif
     #else
         #define LV_USE_ROLLER     1   /*Requires: lv_label*/
-    #endif
-#endif
-#if LV_USE_ROLLER
-    #ifndef LV_ROLLER_INF_PAGES
-        #ifdef CONFIG_LV_ROLLER_INF_PAGES
-            #define LV_ROLLER_INF_PAGES CONFIG_LV_ROLLER_INF_PAGES
-        #else
-            #define LV_ROLLER_INF_PAGES 7 /*Number of extra "pages" when the roller is infinite*/
-        #endif
     #endif
 #endif
 
@@ -2158,6 +2177,25 @@
     #endif
 #endif
 
+/* Built-in TTF decoder */
+#ifndef LV_USE_TINY_TTF
+    #ifdef CONFIG_LV_USE_TINY_TTF
+        #define LV_USE_TINY_TTF CONFIG_LV_USE_TINY_TTF
+    #else
+        #define LV_USE_TINY_TTF 0
+    #endif
+#endif
+#if LV_USE_TINY_TTF
+    /* Enable loading TTF data from files */
+    #ifndef LV_TINY_TTF_FILE_SUPPORT
+        #ifdef CONFIG_LV_TINY_TTF_FILE_SUPPORT
+            #define LV_TINY_TTF_FILE_SUPPORT CONFIG_LV_TINY_TTF_FILE_SUPPORT
+        #else
+            #define LV_TINY_TTF_FILE_SUPPORT 0
+        #endif
+    #endif
+#endif
+
 /*Rlottie library*/
 #ifndef LV_USE_RLOTTIE
     #ifdef CONFIG_LV_USE_RLOTTIE
@@ -2318,6 +2356,39 @@
             #endif
         #endif
     #endif // LV_IME_PINYIN_USE_K9_MODE
+#endif
+
+/*1: Enable file explorer*/
+/*Requires: lv_table*/
+#ifndef LV_USE_FILE_EXPLORER
+    #ifdef CONFIG_LV_USE_FILE_EXPLORER
+        #define LV_USE_FILE_EXPLORER CONFIG_LV_USE_FILE_EXPLORER
+    #else
+        #define LV_USE_FILE_EXPLORER                     0
+    #endif
+#endif
+#if LV_USE_FILE_EXPLORER
+    /*Maximum length of path*/
+    #ifndef LV_FILE_EXPLORER_PATH_MAX_LEN
+        #ifdef CONFIG_LV_FILE_EXPLORER_PATH_MAX_LEN
+            #define LV_FILE_EXPLORER_PATH_MAX_LEN CONFIG_LV_FILE_EXPLORER_PATH_MAX_LEN
+        #else
+            #define LV_FILE_EXPLORER_PATH_MAX_LEN        (128)
+        #endif
+    #endif
+    /*Quick access bar, 1:use, 0:not use*/
+    /*Requires: lv_list*/
+    #ifndef LV_FILE_EXPLORER_QUICK_ACCESS
+        #ifdef _LV_KCONFIG_PRESENT
+            #ifdef CONFIG_LV_FILE_EXPLORER_QUICK_ACCESS
+                #define LV_FILE_EXPLORER_QUICK_ACCESS CONFIG_LV_FILE_EXPLORER_QUICK_ACCESS
+            #else
+                #define LV_FILE_EXPLORER_QUICK_ACCESS 0
+            #endif
+        #else
+            #define LV_FILE_EXPLORER_QUICK_ACCESS        1
+        #endif
+    #endif
 #endif
 
 /*==================

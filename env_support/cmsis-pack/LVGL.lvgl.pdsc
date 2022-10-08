@@ -36,7 +36,19 @@
   <repository type="git">https://github.com/lvgl/lvgl.git</repository>
 
   <releases>
-    <release date="2022-07-29" version="1.0.7" url="https://raw.githubusercontent.com/lvgl/lvgl/master/env_support/cmsis-pack/LVGL.lvgl.1.0.7.pack">
+    <release date="2022-09-16" version="1.0.9" url="https://raw.githubusercontent.com/lvgl/lvgl/master/env_support/cmsis-pack/LVGL.lvgl.1.0.9.pack">
+      - LVGL 9.0.0-dev
+      - Montyly update for September
+      - Introduce a new component: File Explorer
+      - Add support for TTF (Tiny TTF)
+      - Add GPU Support for GD32F450-IPA
+    </release>
+    <release date="2022-08-30" version="1.0.8" url="https://github.com/lvgl/lvgl/raw/eb2e296d23b009aca7daf0e9be062d05b4b0048a/env_support/cmsis-pack/LVGL.lvgl.1.0.8.pack">
+      - LVGL 9.0.0-dev
+      - Add the binding for pikascript (an ultra-light-weight python VM) 
+      - Montyly update for August
+    </release>
+    <release date="2022-07-29" version="1.0.7" url="https://github.com/lvgl/lvgl/raw/b454a66e0be85976385c81cf9c9025f272a66f5d/env_support/cmsis-pack/LVGL.lvgl.1.0.7.pack">
       - LVGL 9.0.0-dev
       - Renderer refactory
       - Update GPU-Arm-2D
@@ -225,24 +237,9 @@
                 <file category="sourceC"            name="src/draw/lv_draw_label.c" />
                 <file category="sourceC"            name="src/draw/lv_img_decoder.c" />
                 <file category="sourceC"            name="src/draw/lv_draw_rect.c" />
-                <file category="sourceC"            name="src/draw/sdl/lv_draw_sdl_label.c" />
-                <file category="sourceC"            name="src/draw/sdl/lv_draw_sdl_arc.c" />
-                <file category="sourceC"            name="src/draw/sdl/lv_draw_sdl_img.c" />
-                <file category="sourceC"            name="src/draw/sdl/lv_draw_sdl_mask.c" />
-                <file category="sourceC"            name="src/draw/sdl/lv_draw_sdl_bg.c" />
-                <file category="sourceC"            name="src/draw/sdl/lv_draw_sdl_texture_cache.c" />
-                <file category="sourceC"            name="src/draw/sdl/lv_draw_sdl_rect.c" />
-                <file category="sourceC"            name="src/draw/sdl/lv_draw_sdl.c" />
-                <file category="sourceC"            name="src/draw/sdl/lv_draw_sdl_polygon.c" />
-                <file category="sourceC"            name="src/draw/sdl/lv_draw_sdl_layer.c" />
-                <file category="sourceC"            name="src/draw/sdl/lv_draw_sdl_stack_blur.c" />
-                <file category="sourceC"            name="src/draw/sdl/lv_draw_sdl_line.c" />
-                <file category="sourceC"            name="src/draw/sdl/lv_draw_sdl_composite.c" />
-                <file category="sourceC"            name="src/draw/sdl/lv_draw_sdl_utils.c" />
+
                 <file category="sourceC"            name="src/draw/lv_draw_transform.c" />
                 <file category="sourceC"            name="src/draw/lv_img_buf.c" />
-                <file category="sourceC"            name="src/draw/stm32_dma2d/lv_gpu_stm32_dma2d.c" />
-                <file category="sourceC"            name="src/draw/swm341_dma2d/lv_gpu_swm341_dma2d.c" />
                 <file category="sourceC"            name="src/draw/lv_draw_mask.c" />
                 <file category="sourceC"            name="src/draw/sw/lv_draw_sw_img.c" />
                 <file category="sourceC"            name="src/draw/sw/lv_draw_sw_polygon.c" />
@@ -262,16 +259,7 @@
                 <file category="sourceC"            name="src/draw/lv_draw_triangle.c" />
                 <file category="sourceC"            name="src/draw/lv_draw.c" />
                 <file category="sourceC"            name="src/draw/lv_draw_layer.c" />
-                <file category="sourceC"            name="src/draw/arm2d/lv_gpu_arm2d.c" />
                 <file category="sourceC"            name="src/draw/lv_draw_arc.c" />
-                <file category="sourceC"            name="src/draw/nxp/lv_gpu_nxp.c" />
-                <file category="sourceC"            name="src/draw/nxp/vglite/lv_draw_vglite_arc.c" />
-                <file category="sourceC"            name="src/draw/nxp/vglite/lv_draw_vglite_rect.c" />
-                <file category="sourceC"            name="src/draw/nxp/vglite/lv_gpu_nxp_vglite.c" />
-                <file category="sourceC"            name="src/draw/nxp/vglite/lv_draw_vglite_blend.c" />
-                <file category="sourceC"            name="src/draw/nxp/pxp/lv_gpu_nxp_pxp_osa.c" />
-                <file category="sourceC"            name="src/draw/nxp/pxp/lv_draw_pxp_blend.c" />
-                <file category="sourceC"            name="src/draw/nxp/pxp/lv_gpu_nxp_pxp.c" />
 
                 <!-- src/font -->
                 <file category="sourceC"            name="src/font/lv_font.c" />
@@ -404,7 +392,7 @@
                 <file category="sourceC"            name="src/themes/default/lv_theme_default.c" />
 
                 <!-- general -->
-                <file category="preIncludeGlobal"   name="lv_conf_cmsis.h" attr="config" version="1.1.0" />
+                <file category="preIncludeGlobal"   name="lv_conf_cmsis.h" attr="config" version="1.1.2" />
                 <file category="sourceC"            name="lv_cmsis_pack.c" attr="config" version="1.0.0" />
                 <file category="header"             name="lvgl.h" />
                 <file category="doc"                name="README.md"/>
@@ -518,6 +506,20 @@
 
             </component>
 
+            <component Cgroup="lvgl" Csub="GPU GD32-IPA"  condition="LVGL-Essential">
+              <description>An hardware acceleration from GD32-IPA</description>
+              <files>
+              <file category="sourceC"            name="src/draw/gd32_ipa/lv_gpu_gd32_ipa.c" />
+              </files>
+
+              <RTE_Components_h>
+
+/*! \brief enable GD32 IPA */
+#define LV_USE_GPU_GD32_IPA      1
+              </RTE_Components_h>
+
+            </component>
+
             <component Cgroup="lvgl" Csub="Extra Themes"  condition="LVGL-Essential">
               <description>Extra Themes, Widgets and Layouts</description>
               <files>
@@ -557,6 +559,32 @@
 
 /*! \brief use extra themes, widgets and layouts */
 #define RTE_GRAPHICS_LVGL_USE_EXTRA_THEMES
+              </RTE_Components_h>
+
+            </component>
+
+            <component Cgroup="lvgl" Csub="PikaScript Binding" Cversion="0.2.0" condition="LVGL-Essential">
+              <description>Add the binding for PikaScript, an ultra-light-weight python VM.</description>
+              <files>
+                <file category="doc"      name="pikascript/README.md"/>
+                <file category="sourceC"  name="pikascript/pika_lvgl.c" />
+                <file category="sourceC"  name="pikascript/pika_lvgl_indev_t.c" />
+                <file category="sourceC"  name="pikascript/pika_lvgl_lv_event.c" />
+                <file category="sourceC"  name="pikascript/pika_lvgl_lv_obj.c" />
+                <file category="sourceC"  name="pikascript/pika_lvgl_lv_style_t.c" />
+                <file category="sourceC"  name="pikascript/pika_lv_point_t.c" />
+                <file category="sourceC"  name="pikascript/pika_lv_timer_t.c" />
+                <file category="sourceC"  name="pikascript/pika_lv_wegit.c" />
+              </files>
+              <Pre_Include_Local_Component_h>
+
+/* enabling PikaScript Binding */
+#define PIKASCRIPT     1
+              </Pre_Include_Local_Component_h>
+              <RTE_Components_h>
+
+/*! \brief enable PikaScrit Binding */
+#define LV_USE_PIKASCRIPT_BINDING          1
               </RTE_Components_h>
 
             </component>
@@ -705,8 +733,42 @@
 
               <RTE_Components_h>
 
-/*! \brief enable ffmpeg support */
+/*! \brief enable pinying support */
 #define LV_USE_IME_PINYIN         1
+              </RTE_Components_h>
+
+            </component>
+
+            <component Cgroup="lvgl" Csub="File Explorer"  condition="LVGL-Essential">
+              <description>Add Pinyin input method</description>
+              <files>
+                <!-- src/others/file_explorer -->
+                <file category="sourceC"            name="src/others/file_explorer/lv_file_explorer.c" />
+                <file category="header"             name="src/others/file_explorer/lv_file_explorer.h" />
+              </files>
+
+              <RTE_Components_h>
+
+/*! \brief enable file explorer support */
+#define LV_USE_FILE_EXPLORER         1
+              </RTE_Components_h>
+
+            </component>
+
+            <component Cgroup="lvgl" Csub="Tiny TTF"  condition="LVGL-Essential">
+              <description>Add tiny ttf support</description>
+              <files>
+                <!-- src/libs/tiny_ttf -->
+                <file category="sourceC"            name="src/libs/tiny_ttf/lv_tiny_ttf.c" />
+                <file category="header"             name="src/libs/tiny_ttf/lv_tiny_ttf.h" />
+                <!-- src/libs/fsdrv -->
+                <file category="sourceC"            name="src/libs/fsdrv/lv_fs_cbfs.c" />
+              </files>
+
+              <RTE_Components_h>
+
+/*! \brief enable tiny ttf support */
+#define LV_USE_TINY_TTF         1
               </RTE_Components_h>
 
             </component>

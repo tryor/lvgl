@@ -42,6 +42,10 @@
     #include "../draw/stm32_dma2d/lv_gpu_stm32_dma2d.h"
 #endif
 
+#if LV_USE_GPU_GD32_IPA
+    #include "../draw/gd32_ipa/lv_gpu_gd32_ipa.h"
+#endif
+
 #if LV_USE_GPU_SWM341_DMA2D
     #include "../draw/swm341_dma2d/lv_gpu_swm341_dma2d.h"
 #endif
@@ -132,6 +136,11 @@ void lv_init(void)
     lv_draw_stm32_dma2d_init();
 #endif
 
+#if LV_USE_GPU_GD32_IPA
+    /*Initialize IPA GPU*/
+    lv_draw_gd32_ipa_init();
+#endif
+
 #if LV_USE_GPU_SWM341_DMA2D
     /*Initialize DMA2D GPU*/
     lv_draw_swm341_dma2d_init();
@@ -153,7 +162,7 @@ void lv_init(void)
     lv_img_cache_set_size(LV_IMG_CACHE_DEF_SIZE);
 #endif
     /*Test if the IDE has UTF-8 encoding*/
-    char * txt = "Á";
+    const char * txt = "Á";
 
     uint8_t * txt_u8 = (uint8_t *)txt;
     if(txt_u8[0] != 0xc3 || txt_u8[1] != 0x81 || txt_u8[2] != 0x00) {
@@ -218,10 +227,6 @@ void lv_init(void)
     lv_fs_win32_init();
 #endif
 
-#if LV_USE_FFMPEG
-    lv_ffmpeg_init();
-#endif
-
 #if LV_USE_PNG
     lv_png_init();
 #endif
@@ -232,6 +237,12 @@ void lv_init(void)
 
 #if LV_USE_BMP
     lv_bmp_init();
+#endif
+
+    /*Make FFMPEG last because the last converter will be checked first and
+     *it's superior to any other */
+#if LV_USE_FFMPEG
+    lv_ffmpeg_init();
 #endif
 
 #if LV_USE_FREETYPE
@@ -397,7 +408,7 @@ bool lv_obj_has_state(const lv_obj_t * obj, lv_state_t state)
     return obj->state & state ? true : false;
 }
 
-void * lv_obj_get_group(const lv_obj_t * obj)
+lv_group_t * lv_obj_get_group(const lv_obj_t * obj)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
 

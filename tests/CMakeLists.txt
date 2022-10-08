@@ -41,6 +41,7 @@ set(LVGL_TEST_OPTIONS_MINIMAL_MONOCHROME
     -DLV_USE_BMP=1
     -DLV_USE_GIF=1
     -DLV_USE_QRCODE=1
+    -DLV_USE_MSG=1
 )
 
 set(LVGL_TEST_OPTIONS_NORMAL_8BIT
@@ -66,6 +67,7 @@ set(LVGL_TEST_OPTIONS_NORMAL_8BIT
     -DLV_USE_SJPG=1
     -DLV_USE_GIF=1
     -DLV_USE_QRCODE=1
+    -DLV_USE_MSG=1
 )
 
 set(LVGL_TEST_OPTIONS_16BIT
@@ -92,6 +94,7 @@ set(LVGL_TEST_OPTIONS_16BIT
     -DLV_USE_SJPG=1
     -DLV_USE_GIF=1
     -DLV_USE_QRCODE=1
+    -DLV_USE_MSG=1
 )
 
 set(LVGL_TEST_OPTIONS_16BIT_SWAP
@@ -120,6 +123,7 @@ set(LVGL_TEST_OPTIONS_16BIT_SWAP
     -DLV_USE_SJPG=1
     -DLV_USE_GIF=1
     -DLV_USE_QRCODE=1
+    -DLV_USE_MSG=1
 )
 
 set(LVGL_TEST_OPTIONS_FULL_32BIT
@@ -189,7 +193,10 @@ set(LVGL_TEST_OPTIONS_FULL_32BIT
     -DLV_USE_QRCODE=1
     -DLV_USE_FRAGMENT=1
     -DLV_USE_IMGFONT=1
+    -DLV_USE_IME_PINYIN=1
     -DLV_USE_MSG=1
+    -DLV_USE_FILE_EXPLORER=1
+    -DLV_USE_TINY_TTF=1
 )
 
 set(LVGL_TEST_OPTIONS_TEST_COMMON
@@ -234,10 +241,11 @@ set(LVGL_TEST_OPTIONS_TEST_COMMON
     -DLV_USE_FS_POSIX=1
     -DLV_FS_POSIX_LETTER='B'
     -DLV_FS_POSIX_CACHE_SIZE=0
+    -DLV_USE_MSG=1
+    -DLV_USE_TINY_TTF=1
     ${LVGL_TEST_COMMON_EXAMPLE_OPTIONS}
     -DLV_FONT_DEFAULT=&lv_font_montserrat_14
     -Wno-unused-but-set-variable # unused variables are common in the dual-heap arrangement
-    -Wno-unused-variable
 )
 
 set(LVGL_TEST_OPTIONS_TEST_SYSHEAP
@@ -291,7 +299,6 @@ set(COMPILE_OPTIONS
     -Wmissing-prototypes
     -Wpointer-arith
     -Wmultichar
-    -Wno-discarded-qualifiers
     -Wpedantic
     -Wreturn-type
     -Wshadow
@@ -329,9 +336,10 @@ add_library(test_common
     STATIC
         src/lv_test_indev.c
         src/lv_test_init.c
-        src/test_fonts/font_1.c
-        src/test_fonts/font_2.c
-        src/test_fonts/font_3.c
+        src/test_assets/font_1.c
+        src/test_assets/font_2.c
+        src/test_assets/font_3.c
+        src/test_assets/ubuntu_font.c
         unity/unity_support.c
         unity/unity.c
 )
@@ -361,7 +369,7 @@ foreach( test_case_fname ${TEST_CASE_FILES} )
         ${test_case_fname}
         ${test_runner_fname}
     )
-    target_link_libraries(${test_name} test_common lvgl_examples lvgl_demos lvgl png ${TEST_LIBS})
+    target_link_libraries(${test_name} test_common lvgl_examples lvgl_demos lvgl png m ${TEST_LIBS})
     target_include_directories(${test_name} PUBLIC ${TEST_INCLUDE_DIRS})
     target_compile_options(${test_name} PUBLIC ${LVGL_TESTFILE_COMPILE_OPTIONS})
 
