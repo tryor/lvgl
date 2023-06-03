@@ -11,6 +11,8 @@
 #include "lv_mem.h"
 #include "lv_ll.h"
 #include "lv_gc.h"
+#include "lv_printf.h"
+#include "lv_profiler.h"
 
 /*********************
  *      DEFINES
@@ -81,6 +83,7 @@ LV_ATTRIBUTE_TIMER_HANDLER uint32_t lv_timer_handler(void)
         return 1;
     }
 
+    LV_PROFILER_BEGIN;
     static uint32_t idle_period_start = 0;
     static uint32_t busy_time         = 0;
 
@@ -141,7 +144,8 @@ LV_ATTRIBUTE_TIMER_HANDLER uint32_t lv_timer_handler(void)
 
     already_running = false; /*Release the mutex*/
 
-    TIMER_TRACE("finished (%d ms until the next timer call)", time_till_next);
+    TIMER_TRACE("finished (%" LV_PRIu32 " ms until the next timer call)", time_till_next);
+    LV_PROFILER_END;
     return time_till_next;
 }
 
@@ -310,8 +314,16 @@ static bool lv_timer_exec(lv_timer_t * timer)
         if(timer->repeat_count > 0) timer->repeat_count--;
         timer->last_run = lv_tick_get();
         TIMER_TRACE("calling timer callback: %p", *((void **)&timer->timer_cb));
+
         if(timer->timer_cb && original_repeat_count != 0) timer->timer_cb(timer);
-        TIMER_TRACE("timer callback %p finished", *((void **)&timer->timer_cb));
+
+        if(!timer_deleted) {
+            TIMER_TRACE("timer callback %p finished", *((void **)&timer->timer_cb));
+        }
+        else {
+            TIMER_TRACE("timer callback finished");
+        }
+
         LV_ASSERT_MEM_INTEGRITY();
         exec = true;
     }

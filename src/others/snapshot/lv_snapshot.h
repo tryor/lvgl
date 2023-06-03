@@ -38,7 +38,7 @@ extern "C" {
  *
  * @return a pointer to an image descriptor, or NULL if failed.
  */
-lv_img_dsc_t * lv_snapshot_take(lv_obj_t * obj, lv_img_cf_t cf);
+lv_img_dsc_t * lv_snapshot_take(lv_obj_t * obj, lv_color_format_t cf);
 
 /** Free the snapshot image returned by @ref lv_snapshot_take
  *
@@ -56,19 +56,20 @@ void lv_snapshot_free(lv_img_dsc_t * dsc);
  *
  * @return the buffer size needed in bytes
  */
-uint32_t lv_snapshot_buf_size_needed(lv_obj_t * obj, lv_img_cf_t cf);
+uint32_t lv_snapshot_buf_size_needed(lv_obj_t * obj, lv_color_format_t cf);
 
 /** Take snapshot for object with its children, save image info to provided buffer.
  *
  * @param obj    The object to generate snapshot.
  * @param cf     color format for generated image.
  * @param dsc    image descriptor to store the image result.
- * @param buff   the buffer to store image data.
+ * @param buf   the buffer to store image data.
  * @param buff_size provided buffer size in bytes.
  *
  * @return LV_RES_OK on success, LV_RES_INV on error.
  */
-lv_res_t lv_snapshot_take_to_buf(lv_obj_t * obj, lv_img_cf_t cf, lv_img_dsc_t * dsc, void * buf, uint32_t buff_size);
+lv_res_t lv_snapshot_take_to_buf(lv_obj_t * obj, lv_color_format_t cf, lv_img_dsc_t * dsc, void * buf,
+                                 uint32_t buff_size);
 
 
 /**********************

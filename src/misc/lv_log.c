@@ -12,6 +12,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include "lv_printf.h"
+#include "lv_mem.h"
 #include "../hal/lv_hal_tick.h"
 
 #if LV_LOG_PRINTF
@@ -23,7 +24,7 @@
  *********************/
 
 #if LV_LOG_USE_TIMESTAMP
-    #define LOG_TIMESTAMP_FMT  "\t(%" LV_PRId32 ".%03" LV_PRId32 ", +%" LV_PRId32 ")\t"
+    #define LOG_TIMESTAMP_FMT  "\t(%" LV_PRIu32 ".%03" LV_PRIu32 ", +%" LV_PRIu32 ")\t"
     #define LOG_TIMESTAMP_EXPR t / 1000, t % 1000, t - last_log_time,
 #else
     #define LOG_TIMESTAMP_FMT
@@ -85,7 +86,7 @@ void _lv_log_add(lv_log_level_t level, const char * file, int line, const char *
 
         /*Use only the file name not the path*/
         size_t p;
-        for(p = strlen(file); p > 0; p--) {
+        for(p = lv_strlen(file); p > 0; p--) {
             if(file[p] == '/' || file[p] == '\\') {
                 p++;    /*Skip the slash*/
                 break;
@@ -108,7 +109,7 @@ void _lv_log_add(lv_log_level_t level, const char * file, int line, const char *
             lv_vsnprintf(msg, sizeof(msg), format, args);
             lv_snprintf(buf, sizeof(buf), "[%s]" LOG_TIMESTAMP_FMT " %s: %s \t(in %s line #%d)\n",
                         lvl_prefix[level], LOG_TIMESTAMP_EXPR func, msg, &file[p], line);
-            custom_print_cb(buf);
+            custom_print_cb(level, buf);
         }
 #endif
 
@@ -132,7 +133,7 @@ void lv_log(const char * format, ...)
     if(custom_print_cb) {
         char buf[512];
         lv_vsnprintf(buf, sizeof(buf), format, args);
-        custom_print_cb(buf);
+        custom_print_cb(LV_LOG_LEVEL_USER, buf);
     }
 #endif
 

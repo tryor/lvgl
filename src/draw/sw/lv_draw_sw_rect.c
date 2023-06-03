@@ -84,19 +84,6 @@ void lv_draw_sw_rect(lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t * dsc, c
     LV_ASSERT_MEM_INTEGRITY();
 }
 
-void lv_draw_sw_bg(lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t * dsc, const lv_area_t * coords)
-{
-#if LV_COLOR_DEPTH == 32
-    if(draw_ctx->render_with_alpha) {
-        lv_memzero(draw_ctx->buf, lv_area_get_size(draw_ctx->buf_area) * sizeof(lv_color_t));
-    }
-#endif
-
-    draw_bg(draw_ctx, dsc, coords);
-    draw_bg_img(draw_ctx, dsc, coords);
-}
-
-
 /**********************
  *   STATIC FUNCTIONS
  **********************/
@@ -121,7 +108,7 @@ static void draw_bg(lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t * dsc, co
 
     lv_grad_dir_t grad_dir = dsc->bg_grad.dir;
     lv_color_t bg_color    = grad_dir == LV_GRAD_DIR_NONE ? dsc->bg_color : dsc->bg_grad.stops[0].color;
-    if(bg_color.full == dsc->bg_grad.stops[1].color.full) grad_dir = LV_GRAD_DIR_NONE;
+    if(lv_color_eq(bg_color, dsc->bg_grad.stops[1].color)) grad_dir = LV_GRAD_DIR_NONE;
 
     bool mask_any = lv_draw_mask_is_any(&bg_coords);
     lv_draw_sw_blend_dsc_t blend_dsc = {0};
@@ -1137,12 +1124,7 @@ static void draw_outline(lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t * ds
 
     lv_area_t area_outer;
     lv_area_copy(&area_outer, &area_inner);
-
-    area_outer.x1 -= dsc->outline_width;
-    area_outer.x2 += dsc->outline_width;
-    area_outer.y1 -= dsc->outline_width;
-    area_outer.y2 += dsc->outline_width;
-
+    lv_area_increase(&area_outer, dsc->outline_width, dsc->outline_width);
 
     int32_t inner_w = lv_area_get_width(&area_inner);
     int32_t inner_h = lv_area_get_height(&area_inner);

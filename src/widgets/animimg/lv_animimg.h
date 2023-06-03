@@ -37,16 +37,23 @@ typedef struct {
     lv_img_t img;
     lv_anim_t anim;
     /*picture sequence */
-    lv_img_dsc_t ** dsc;
+    const void ** dsc;
     int8_t  pic_count;
 } lv_animimg_t;
 
 
 /*Image parts*/
-enum {
+enum _lv_animimg_part_t {
     LV_ANIM_IMG_PART_MAIN,
 };
+
+
+#ifdef DOXYGEN
+typedef _lv_animimg_part_t lv_animimg_part_t;
+#else
 typedef uint8_t lv_animimg_part_t;
+#endif
+
 
 /**********************
  * GLOBAL PROTOTYPES
@@ -69,7 +76,7 @@ lv_obj_t * lv_animimg_create(lv_obj_t * parent);
  * @param dsc pointer to a series images
  * @param num images' number
  */
-void lv_animimg_set_src(lv_obj_t * img,  lv_img_dsc_t * dsc[], uint8_t num);
+void lv_animimg_set_src(lv_obj_t * img, const void * dsc[], uint8_t num);
 
 /**
  * Startup the image animation.
@@ -80,11 +87,12 @@ void lv_animimg_start(lv_obj_t * obj);
 /**
  * Set the image animation duration time. unit:ms
  * @param img pointer to an animation image object
+ * @param duration the duration
  */
 void lv_animimg_set_duration(lv_obj_t * img, uint32_t duration);
 
 /**
- * Set the image animation reapeatly play times.
+ * Set the image animation repeatly play times.
  * @param img pointer to an animation image object
  * @param count the number of times to repeat the animation
  */
@@ -93,6 +101,34 @@ void lv_animimg_set_repeat_count(lv_obj_t * img, uint16_t count);
 /*=====================
  * Getter functions
  *====================*/
+
+/**
+ * Get the image animation images source.
+ * @param img pointer to an animation image object
+ * @return a pointer that will point to a series images
+ */
+const void ** lv_animimg_get_src(lv_obj_t * img);
+
+/**
+ * Get the image animation images source.
+ * @param img pointer to an animation image object
+ * @return the number of source images
+ */
+uint8_t lv_animimg_get_src_count(lv_obj_t * img);
+
+/**
+ * Get the image animation duration time. unit:ms
+ * @param img pointer to an animation image object
+ * @return the animation duration time
+ */
+uint32_t lv_animimg_get_duration(lv_obj_t * img);
+
+/**
+ * Get the image animation repeat play times.
+ * @param img pointer to an animation image object
+ * @return the repeat count
+ */
+uint16_t lv_animimg_get_repeat_count(lv_obj_t * img);
 
 #endif /*LV_USE_ANIMIMG*/
 

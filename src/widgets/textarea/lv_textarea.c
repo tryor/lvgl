@@ -141,7 +141,7 @@ void lv_textarea_add_char(lv_obj_t * obj, uint32_t c)
 
     if(ta->pwd_mode) {
         /*+2: the new char + \0*/
-        size_t realloc_size = strlen(ta->pwd_tmp) + strlen(letter_buf) + 1;
+        size_t realloc_size = lv_strlen(ta->pwd_tmp) + lv_strlen(letter_buf) + 1;
         ta->pwd_tmp = lv_realloc(ta->pwd_tmp, realloc_size);
         LV_ASSERT_MALLOC(ta->pwd_tmp);
         if(ta->pwd_tmp == NULL) return;
@@ -155,7 +155,7 @@ void lv_textarea_add_char(lv_obj_t * obj, uint32_t c)
     /*Move the cursor after the new character*/
     lv_textarea_set_cursor_pos(obj, lv_textarea_get_cursor_pos(obj) + 1);
 
-    lv_event_send(obj, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_send_event(obj, LV_EVENT_VALUE_CHANGED, NULL);
 }
 
 void lv_textarea_add_text(lv_obj_t * obj, const char * txt)
@@ -191,7 +191,7 @@ void lv_textarea_add_text(lv_obj_t * obj, const char * txt)
     lv_textarea_clear_selection(obj);
 
     if(ta->pwd_mode) {
-        size_t realloc_size = strlen(ta->pwd_tmp) + strlen(txt) + 1;
+        size_t realloc_size = lv_strlen(ta->pwd_tmp) + lv_strlen(txt) + 1;
         ta->pwd_tmp = lv_realloc(ta->pwd_tmp, realloc_size);
         LV_ASSERT_MALLOC(ta->pwd_tmp);
         if(ta->pwd_tmp == NULL) return;
@@ -205,7 +205,7 @@ void lv_textarea_add_text(lv_obj_t * obj, const char * txt)
     /*Move the cursor after the new text*/
     lv_textarea_set_cursor_pos(obj, lv_textarea_get_cursor_pos(obj) + _lv_txt_get_encoded_length(txt));
 
-    lv_event_send(obj, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_send_event(obj, LV_EVENT_VALUE_CHANGED, NULL);
 }
 
 void lv_textarea_del_char(lv_obj_t * obj)
@@ -240,7 +240,7 @@ void lv_textarea_del_char(lv_obj_t * obj)
     if(ta->pwd_mode) {
         _lv_txt_cut(ta->pwd_tmp, ta->cursor.pos - 1, 1);
 
-        ta->pwd_tmp = lv_realloc(ta->pwd_tmp, strlen(ta->pwd_tmp) + 1);
+        ta->pwd_tmp = lv_realloc(ta->pwd_tmp, lv_strlen(ta->pwd_tmp) + 1);
         LV_ASSERT_MALLOC(ta->pwd_tmp);
         if(ta->pwd_tmp == NULL) return;
     }
@@ -248,7 +248,7 @@ void lv_textarea_del_char(lv_obj_t * obj)
     /*Move the cursor to the place of the deleted character*/
     lv_textarea_set_cursor_pos(obj, ta->cursor.pos - 1);
 
-    lv_event_send(obj, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_send_event(obj, LV_EVENT_VALUE_CHANGED, NULL);
 
 }
 
@@ -300,16 +300,17 @@ void lv_textarea_set_text(lv_obj_t * obj, const char * txt)
     }
 
     if(ta->pwd_mode) {
-        ta->pwd_tmp = lv_realloc(ta->pwd_tmp, strlen(txt) + 1);
+        size_t len = lv_strlen(txt) + 1;
+        ta->pwd_tmp = lv_realloc(ta->pwd_tmp, len);
         LV_ASSERT_MALLOC(ta->pwd_tmp);
         if(ta->pwd_tmp == NULL) return;
-        strcpy(ta->pwd_tmp, txt);
+        lv_strcpy(ta->pwd_tmp, txt);
 
         /*Auto hide characters*/
         auto_hide_characters(obj);
     }
 
-    lv_event_send(obj, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_send_event(obj, LV_EVENT_VALUE_CHANGED, NULL);
 }
 
 void lv_textarea_set_placeholder_text(lv_obj_t * obj, const char * txt)
@@ -319,7 +320,7 @@ void lv_textarea_set_placeholder_text(lv_obj_t * obj, const char * txt)
 
     lv_textarea_t * ta = (lv_textarea_t *)obj;
 
-    size_t txt_len = strlen(txt);
+    size_t txt_len = lv_strlen(txt);
     if((txt_len == 0) && (ta->placeholder_txt)) {
         lv_free(ta->placeholder_txt);
         ta->placeholder_txt = NULL;
@@ -330,11 +331,11 @@ void lv_textarea_set_placeholder_text(lv_obj_t * obj, const char * txt)
         ta->placeholder_txt = lv_realloc(ta->placeholder_txt, txt_len + 1);
         LV_ASSERT_MALLOC(ta->placeholder_txt);
         if(ta->placeholder_txt == NULL) {
-            LV_LOG_ERROR("lv_textarea_set_placeholder_text: couldn't allocate memory for placeholder");
+            LV_LOG_ERROR("couldn't allocate memory for placeholder");
             return;
         }
 
-        strcpy(ta->placeholder_txt, txt);
+        lv_strcpy(ta->placeholder_txt, txt);
         ta->placeholder_txt[txt_len] = '\0';
     }
 
@@ -412,13 +413,13 @@ void lv_textarea_set_password_mode(lv_obj_t * obj, bool en)
     /*Pwd mode is now enabled*/
     if(en) {
         char * txt = lv_label_get_text(ta->label);
-        size_t len = strlen(txt);
+        size_t len = lv_strlen(txt);
 
         ta->pwd_tmp = lv_malloc(len + 1);
         LV_ASSERT_MALLOC(ta->pwd_tmp);
         if(ta->pwd_tmp == NULL) return;
 
-        strcpy(ta->pwd_tmp, txt);
+        lv_strcpy(ta->pwd_tmp, txt);
 
         pwd_char_hider(obj);
 
@@ -447,18 +448,18 @@ void lv_textarea_set_password_bullet(lv_obj_t * obj, const char * bullet)
         ta->pwd_bullet = NULL;
     }
     else {
-        size_t txt_len = strlen(bullet);
+        size_t txt_len = lv_strlen(bullet);
 
         /*Allocate memory for the pwd_bullet text*/
         /*NOTE: Using special realloc behavior, malloc-like when data_p is NULL*/
         ta->pwd_bullet = lv_realloc(ta->pwd_bullet, txt_len + 1);
         LV_ASSERT_MALLOC(ta->pwd_bullet);
         if(ta->pwd_bullet == NULL) {
-            LV_LOG_ERROR("lv_textarea_set_password_bullet: couldn't allocate memory for bullet");
+            LV_LOG_ERROR("couldn't allocate memory for bullet");
             return;
         }
 
-        strcpy(ta->pwd_bullet, bullet);
+        lv_strcpy(ta->pwd_bullet, bullet);
         ta->pwd_bullet[txt_len] = '\0';
     }
 
@@ -843,8 +844,9 @@ static void lv_textarea_constructor(const lv_obj_class_t * class_p, lv_obj_t * o
     ta->label = lv_label_create(obj);
     lv_obj_set_width(ta->label, lv_pct(100));
     lv_label_set_text(ta->label, "");
-    lv_obj_add_event_cb(ta->label, label_event_cb, LV_EVENT_ALL, NULL);
+    lv_obj_add_event(ta->label, label_event_cb, LV_EVENT_ALL, NULL);
     lv_obj_add_flag(obj, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLL_WITH_ARROW);
     lv_textarea_set_cursor_pos(obj, 0);
 
     start_cursor_blink(obj);
@@ -905,7 +907,7 @@ static void lv_textarea_event(const lv_obj_class_t * class_p, lv_event_t * e)
         else if(c == LV_KEY_END)
             lv_textarea_set_cursor_pos(obj, LV_TEXTAREA_CURSOR_LAST);
         else if(c == LV_KEY_ENTER && lv_textarea_get_one_line(obj))
-            lv_event_send(obj, LV_EVENT_READY, NULL);
+            lv_obj_send_event(obj, LV_EVENT_READY, NULL);
         else {
             lv_textarea_add_char(obj, c);
         }
@@ -997,7 +999,7 @@ static void pwd_char_hider(lv_obj_t * obj)
     if(enc_len == 0) return;
 
     const char * bullet = lv_textarea_get_password_bullet(obj);
-    const size_t bullet_len = strlen(bullet);
+    const size_t bullet_len = lv_strlen(bullet);
     char * txt_tmp = lv_malloc(enc_len * bullet_len + 1);
 
     uint32_t i;
@@ -1263,7 +1265,7 @@ static void update_cursor_position_on_click(lv_event_t * e)
 static lv_res_t insert_handler(lv_obj_t * obj, const char * txt)
 {
     ta_insert_replace = NULL;
-    lv_event_send(obj, LV_EVENT_INSERT, (char *)txt);
+    lv_obj_send_event(obj, LV_EVENT_INSERT, (char *)txt);
 
     /* Drop txt if insert replace is set to '\0' */
     if(ta_insert_replace && ta_insert_replace[0] == '\0')
@@ -1346,7 +1348,7 @@ static void draw_cursor(lv_event_t * e)
     lv_draw_label_dsc_t cur_label_dsc;
     lv_draw_label_dsc_init(&cur_label_dsc);
     lv_obj_init_draw_label_dsc(obj, LV_PART_CURSOR, &cur_label_dsc);
-    if(cur_dsc.bg_opa > LV_OPA_MIN || cur_label_dsc.color.full != label_color.full) {
+    if(cur_dsc.bg_opa > LV_OPA_MIN || !lv_color_eq(cur_label_dsc.color, label_color)) {
         lv_draw_label(draw_ctx, &cur_label_dsc, &cur_area, letter_buf, NULL);
     }
 }

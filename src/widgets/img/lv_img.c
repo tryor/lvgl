@@ -9,14 +9,6 @@
 #include "lv_img.h"
 #if LV_USE_IMG != 0
 
-#include "../../core/lv_disp.h"
-#include "../../misc/lv_assert.h"
-#include "../../draw/lv_img_decoder.h"
-#include "../../misc/lv_fs.h"
-#include "../../misc/lv_txt.h"
-#include "../../misc/lv_math.h"
-#include "../../misc/lv_log.h"
-
 /*********************
  *      DEFINES
  *********************/
@@ -79,22 +71,22 @@ void lv_img_set_src(lv_obj_t * obj, const void * src)
 #if LV_USE_LOG && LV_LOG_LEVEL >= LV_LOG_LEVEL_INFO
     switch(src_type) {
         case LV_IMG_SRC_FILE:
-            LV_LOG_TRACE("lv_img_set_src: `LV_IMG_SRC_FILE` type found");
+            LV_LOG_TRACE("`LV_IMG_SRC_FILE` type found");
             break;
         case LV_IMG_SRC_VARIABLE:
-            LV_LOG_TRACE("lv_img_set_src: `LV_IMG_SRC_VARIABLE` type found");
+            LV_LOG_TRACE("`LV_IMG_SRC_VARIABLE` type found");
             break;
         case LV_IMG_SRC_SYMBOL:
-            LV_LOG_TRACE("lv_img_set_src: `LV_IMG_SRC_SYMBOL` type found");
+            LV_LOG_TRACE("`LV_IMG_SRC_SYMBOL` type found");
             break;
         default:
-            LV_LOG_WARN("lv_img_set_src: unknown type");
+            LV_LOG_WARN("unknown type");
     }
 #endif
 
     /*If the new source type is unknown free the memories of the old source*/
     if(src_type == LV_IMG_SRC_UNKNOWN) {
-        LV_LOG_WARN("lv_img_set_src: unknown image type");
+        LV_LOG_WARN("unknown image type");
         if(img->src_type == LV_IMG_SRC_SYMBOL || img->src_type == LV_IMG_SRC_FILE) {
             lv_free((void *)img->src);
         }
@@ -124,10 +116,10 @@ void lv_img_set_src(lv_obj_t * obj, const void * src)
             if(img->src_type == LV_IMG_SRC_FILE || img->src_type == LV_IMG_SRC_SYMBOL) {
                 old_src = img->src;
             }
-            char * new_str = lv_malloc(strlen(src) + 1);
+            char * new_str = lv_malloc(lv_strlen(src) + 1);
             LV_ASSERT_MALLOC(new_str);
             if(new_str == NULL) return;
-            strcpy(new_str, src);
+            lv_strcpy(new_str, src);
             img->src = new_str;
 
             if(old_src) lv_free((void *)old_src);
@@ -155,7 +147,7 @@ void lv_img_set_src(lv_obj_t * obj, const void * src)
     lv_obj_refresh_self_size(obj);
 
     /*Provide enough room for the rotated corners*/
-    if(img->angle || img->zoom != LV_IMG_ZOOM_NONE) lv_obj_refresh_ext_draw_size(obj);
+    if(img->angle || img->zoom != LV_ZOOM_NONE) lv_obj_refresh_ext_draw_size(obj);
 
     lv_obj_invalidate(obj);
 }
@@ -165,8 +157,6 @@ void lv_img_set_offset_x(lv_obj_t * obj, lv_coord_t x)
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
     lv_img_t * img = (lv_img_t *)obj;
-
-    x = x % img->w;
 
     img->offset.x = x;
     lv_obj_invalidate(obj);
@@ -178,15 +168,14 @@ void lv_img_set_offset_y(lv_obj_t * obj, lv_coord_t y)
 
     lv_img_t * img = (lv_img_t *)obj;
 
-    y = y % img->h;
-
     img->offset.y = y;
     lv_obj_invalidate(obj);
 }
 
 void lv_img_set_angle(lv_obj_t * obj, int16_t angle)
 {
-    if(angle < 0 || angle >= 3600) angle = angle % 3600;
+    while(angle >= 3600) angle -= 3600;
+    while(angle < 0) angle += 3600;
 
     lv_img_t * img = (lv_img_t *)obj;
     if(angle == img->angle) return;
@@ -264,7 +253,7 @@ void lv_img_set_zoom(lv_obj_t * obj, uint16_t zoom)
     lv_coord_t w = lv_obj_get_width(obj);
     lv_coord_t h = lv_obj_get_height(obj);
     lv_area_t a;
-    _lv_img_buf_get_transformed_area(&a, w, h, img->angle, img->zoom >> 8, &img->pivot);
+    _lv_img_buf_get_transformed_area(&a, w, h, img->angle, img->zoom, &img->pivot);
     a.x1 += obj->coords.x1 - 1;
     a.y1 += obj->coords.y1 - 1;
     a.x2 += obj->coords.x1 + 1;
@@ -338,7 +327,7 @@ lv_coord_t lv_img_get_offset_y(lv_obj_t * obj)
     return img->offset.y;
 }
 
-uint16_t lv_img_get_angle(lv_obj_t * obj)
+lv_coord_t lv_img_get_angle(lv_obj_t * obj)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
@@ -356,7 +345,7 @@ void lv_img_get_pivot(lv_obj_t * obj, lv_point_t * pivot)
     *pivot = img->pivot;
 }
 
-uint16_t lv_img_get_zoom(lv_obj_t * obj)
+lv_coord_t lv_img_get_zoom(lv_obj_t * obj)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
@@ -394,16 +383,16 @@ static void lv_img_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
 
     img->src       = NULL;
     img->src_type  = LV_IMG_SRC_UNKNOWN;
-    img->cf        = LV_IMG_CF_UNKNOWN;
+    img->cf        = LV_COLOR_FORMAT_UNKNOWN;
     img->w         = lv_obj_get_width(obj);
     img->h         = lv_obj_get_height(obj);
-    img->angle = 0;
-    img->zoom = LV_IMG_ZOOM_NONE;
+    img->angle     = 0;
+    img->zoom      = LV_ZOOM_NONE;
     img->antialias = LV_COLOR_DEPTH > 8 ? 1 : 0;
     img->offset.x  = 0;
     img->offset.y  = 0;
-    img->pivot.x = 0;
-    img->pivot.y = 0;
+    img->pivot.x   = 0;
+    img->pivot.y   = 0;
     img->obj_size_mode = LV_IMG_SIZE_MODE_VIRTUAL;
 
     lv_obj_clear_flag(obj, LV_OBJ_FLAG_CLICKABLE);
@@ -468,7 +457,7 @@ static void lv_img_event(const lv_obj_class_t * class_p, lv_event_t * e)
         lv_coord_t * s = lv_event_get_param(e);
 
         /*If the image has angle provide enough room for the rotated corners*/
-        if(img->angle || img->zoom != LV_IMG_ZOOM_NONE) {
+        if(img->angle || img->zoom != LV_ZOOM_NONE) {
             lv_area_t a;
             lv_coord_t w = lv_obj_get_width(obj);
             lv_coord_t h = lv_obj_get_height(obj);
@@ -485,7 +474,7 @@ static void lv_img_event(const lv_obj_class_t * class_p, lv_event_t * e)
         /*If the object is exactly image sized (not cropped, not mosaic) and transformed
          *perform hit test on its transformed area*/
         if(img->w == lv_obj_get_width(obj) && img->h == lv_obj_get_height(obj) &&
-           (img->zoom != LV_IMG_ZOOM_NONE || img->angle != 0 || img->pivot.x != img->w / 2 || img->pivot.y != img->h / 2)) {
+           (img->zoom != LV_ZOOM_NONE || img->angle != 0 || img->pivot.x != img->w / 2 || img->pivot.y != img->h / 2)) {
 
             lv_coord_t w = lv_obj_get_width(obj);
             lv_coord_t h = lv_obj_get_height(obj);
@@ -533,7 +522,7 @@ static void draw_img(lv_event_t * e)
         }
 
         /*Non true color format might have "holes"*/
-        if(img->cf != LV_IMG_CF_TRUE_COLOR && img->cf != LV_IMG_CF_RAW) {
+        if(lv_color_format_has_alpha(img->cf)) {
             info->res = LV_COVER_RES_NOT_COVER;
             return;
         }
@@ -550,7 +539,7 @@ static void draw_img(lv_event_t * e)
         }
 
         const lv_area_t * clip_area = lv_event_get_param(e);
-        if(img->zoom == LV_IMG_ZOOM_NONE) {
+        if(img->zoom == LV_ZOOM_NONE) {
             if(_lv_area_is_in(clip_area, &obj->coords, 0) == false) {
                 info->res = LV_COVER_RES_NOT_COVER;
                 return;
@@ -659,12 +648,14 @@ static void draw_img(lv_event_t * e)
                 draw_ctx->clip_area = &img_clip_area;
 
                 lv_area_t coords_tmp;
-                coords_tmp.y1 = img_max_area.y1 + img->offset.y;
+                lv_coord_t offset_x = img->offset.x % img->w;
+                lv_coord_t offset_y = img->offset.y % img->h;
+                coords_tmp.y1 = img_max_area.y1 + offset_y;
                 if(coords_tmp.y1 > img_max_area.y1) coords_tmp.y1 -= img->h;
                 coords_tmp.y2 = coords_tmp.y1 + img->h - 1;
 
                 for(; coords_tmp.y1 < img_max_area.y2; coords_tmp.y1 += img_size_final.y, coords_tmp.y2 += img_size_final.y) {
-                    coords_tmp.x1 = img_max_area.x1 + img->offset.x;
+                    coords_tmp.x1 = img_max_area.x1 + offset_x;
                     if(coords_tmp.x1 > img_max_area.x1) coords_tmp.x1 -= img->w;
                     coords_tmp.x2 = coords_tmp.x1 + img->w - 1;
 
@@ -683,11 +674,11 @@ static void draw_img(lv_event_t * e)
             }
             else if(img->src == NULL) {
                 /*Do not need to draw image when src is NULL*/
-                LV_LOG_WARN("draw_img: image source is NULL");
+                LV_LOG_WARN("image source is NULL");
             }
             else {
                 /*Trigger the error handler of image draw*/
-                LV_LOG_WARN("draw_img: image source type is unknown");
+                LV_LOG_WARN("image source type is unknown");
                 lv_draw_img(draw_ctx, NULL, &obj->coords, NULL);
             }
         }

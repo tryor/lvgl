@@ -150,22 +150,30 @@ LV_ATTRIBUTE_FAST_MEM void lv_memset_builtin(void * dst, uint8_t v, size_t len)
     }
 }
 
+/* See https://en.cppreference.com/w/c/string/byte/strlen for reference */
 size_t lv_strlen_builtin(const char * str)
 {
     size_t i = 0;
     while(str[i]) i++;
 
-    return i + 1;
+    return i;
 }
 
-size_t lv_strncpy_builtin(char * dst, size_t dest_size, const char * src)
+char * lv_strncpy_builtin(char * dst, const char * src, size_t dest_size)
 {
     size_t i;
-    for(i = 0; i < dest_size - 1 && *src; i++) {
+    for(i = 0; i < dest_size - 1 && src[i]; i++) {
         dst[i] = src[i];
     }
     dst[i] = '\0';
-    return i;
+    return dst;
+}
+
+char * lv_strcpy_builtin(char * dst, const char * src)
+{
+    char * tmp = dst;
+    while((*dst++ = *src++) != '\0');
+    return tmp;
 }
 
 /**********************

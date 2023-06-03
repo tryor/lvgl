@@ -11,6 +11,7 @@
 #include "../../core/lv_obj.h"
 #include "../../misc/lv_assert.h"
 #include "../../core/lv_group.h"
+#include "../../core/lv_disp.h"
 #include "../../draw/lv_draw.h"
 #include "../../misc/lv_color.h"
 #include "../../misc/lv_math.h"
@@ -610,8 +611,8 @@ void lv_label_ins_text(lv_obj_t * obj, uint32_t pos, const char * txt)
     lv_obj_invalidate(obj);
 
     /*Allocate space for the new text*/
-    size_t old_len = strlen(label->text);
-    size_t ins_len = strlen(txt);
+    size_t old_len = lv_strlen(label->text);
+    size_t ins_len = lv_strlen(txt);
     size_t new_len = ins_len + old_len;
     label->text        = lv_realloc(label->text, new_len + 1);
     LV_ASSERT_MALLOC(label->text);
@@ -1125,7 +1126,7 @@ static void lv_label_refr_text(lv_obj_t * obj)
             uint32_t letter_id = lv_label_get_letter_on(obj, &p);
 
             /*Be sure there is space for the dots*/
-            size_t txt_len = strlen(label->text);
+            size_t txt_len = lv_strlen(label->text);
             uint32_t byte_id     = _lv_txt_encoded_get_byte_id(label->text, letter_id);
             while(byte_id + LV_LABEL_DOT_NUM > txt_len) {
                 _lv_txt_encoded_prev(label->text, &byte_id);
@@ -1269,7 +1270,7 @@ static size_t get_text_length(const char * text)
 #if LV_USE_ARABIC_PERSIAN_CHARS
     len = _lv_txt_ap_calc_bytes_cnt(text);
 #else
-    len = strlen(text) + 1;
+    len = lv_strlen(text) + 1;
 #endif
 
     return len;
@@ -1280,7 +1281,7 @@ static void copy_text_to_label(lv_label_t * label, const char * text)
 #if LV_USE_ARABIC_PERSIAN_CHARS
     _lv_txt_ap_proc(text, label->text);
 #else
-    (void) strcpy(label->text, text);
+    lv_strcpy(label->text, text);
 #endif
 }
 

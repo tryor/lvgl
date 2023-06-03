@@ -54,10 +54,6 @@ void test_line_size_should_be_updated_after_adding_points(void)
         calculated_width = LV_MAX(points[point_idx].x, calculated_width);
         calculated_height = LV_MAX(points[point_idx].y, calculated_height);
     }
-    /* Add style line width */
-    lv_coord_t line_width = lv_obj_get_style_line_width(line, LV_PART_MAIN);
-    calculated_width += line_width;
-    calculated_height += line_width;
 
     TEST_ASSERT_EQUAL_UINT16(calculated_width, lv_obj_get_self_width(line));
     TEST_ASSERT_EQUAL_UINT16(calculated_height, lv_obj_get_self_height(line));
@@ -76,7 +72,7 @@ static void line_event_cb(lv_event_t * e)
 void test_line_should_update_extra_draw_size_based_on_style(void)
 {
     /* Setup an event handler for line extra draw size event */
-    lv_obj_add_event_cb(line, line_event_cb, LV_EVENT_ALL, NULL);
+    lv_obj_add_event(line, line_event_cb, LV_EVENT_ALL, NULL);
     /* Trigger the extra draw size event */
     lv_obj_refresh_ext_draw_size(line);
 

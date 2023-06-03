@@ -8,6 +8,8 @@
  *********************/
 #include "lv_obj.h"
 #include "lv_theme.h"
+#include "lv_disp.h"
+#include "lv_disp_private.h"
 
 /*********************
  *      DEFINES
@@ -61,15 +63,12 @@ lv_obj_t * lv_obj_class_create_obj(const lv_obj_class_t * class_p, lv_obj_t * pa
         }
 
         if(disp->screens == NULL) {
-            disp->screens = lv_malloc(sizeof(lv_obj_t *));
-            disp->screens[0] = obj;
-            disp->screen_cnt = 1;
+            disp->screen_cnt = 0;
         }
-        else {
-            disp->screen_cnt++;
-            disp->screens = lv_realloc(disp->screens, sizeof(lv_obj_t *) * disp->screen_cnt);
-            disp->screens[disp->screen_cnt - 1] = obj;
-        }
+
+        disp->screen_cnt++;
+        disp->screens = lv_realloc(disp->screens, sizeof(lv_obj_t *) * disp->screen_cnt);
+        disp->screens[disp->screen_cnt - 1] = obj;
 
         /*Set coordinates to full screen size*/
         obj->coords.x1 = 0;
@@ -85,17 +84,10 @@ lv_obj_t * lv_obj_class_create_obj(const lv_obj_class_t * class_p, lv_obj_t * pa
             lv_obj_allocate_spec_attr(parent);
         }
 
-        if(parent->spec_attr->children == NULL) {
-            parent->spec_attr->children = lv_malloc(sizeof(lv_obj_t *));
-            parent->spec_attr->children[0] = obj;
-            parent->spec_attr->child_cnt = 1;
-        }
-        else {
-            parent->spec_attr->child_cnt++;
-            parent->spec_attr->children = lv_realloc(parent->spec_attr->children,
-                                                     sizeof(lv_obj_t *) * parent->spec_attr->child_cnt);
-            parent->spec_attr->children[parent->spec_attr->child_cnt - 1] = obj;
-        }
+        parent->spec_attr->child_cnt++;
+        parent->spec_attr->children = lv_realloc(parent->spec_attr->children,
+                                                 sizeof(lv_obj_t *) * parent->spec_attr->child_cnt);
+        parent->spec_attr->children[parent->spec_attr->child_cnt - 1] = obj;
     }
 
     return obj;
@@ -123,8 +115,8 @@ void lv_obj_class_init_obj(lv_obj_t * obj)
     if(parent) {
         /*Call the ancestor's event handler to the parent to notify it about the new child.
          *Also triggers layout update*/
-        lv_event_send(parent, LV_EVENT_CHILD_CHANGED, obj);
-        lv_event_send(parent, LV_EVENT_CHILD_CREATED, obj);
+        lv_obj_send_event(parent, LV_EVENT_CHILD_CHANGED, obj);
+        lv_obj_send_event(parent, LV_EVENT_CHILD_CREATED, obj);
 
         /*Invalidate the area if not screen created*/
         lv_obj_invalidate(obj);

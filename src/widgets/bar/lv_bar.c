@@ -257,10 +257,7 @@ static void draw_indic(lv_event_t * e)
 
     lv_coord_t transf_w = lv_obj_get_style_transform_width(obj, LV_PART_MAIN);
     lv_coord_t transf_h = lv_obj_get_style_transform_height(obj, LV_PART_MAIN);
-    bar_coords.x1 -= transf_w;
-    bar_coords.x2 += transf_w;
-    bar_coords.y1 -= transf_h;
-    bar_coords.y2 += transf_h;
+    lv_area_increase(&bar_coords, transf_w, transf_h);
     lv_coord_t barw = lv_area_get_width(&bar_coords);
     lv_coord_t barh = lv_area_get_height(&bar_coords);
     int32_t range = bar->max_value - bar->min_value;
@@ -406,8 +403,8 @@ static void draw_indic(lv_event_t * e)
         part_draw_dsc.type = LV_BAR_DRAW_PART_INDICATOR;
         part_draw_dsc.draw_area = &bar->indic_area;
 
-        lv_event_send(obj, LV_EVENT_DRAW_PART_BEGIN, &part_draw_dsc);
-        lv_event_send(obj, LV_EVENT_DRAW_PART_END, &part_draw_dsc);
+        lv_obj_send_event(obj, LV_EVENT_DRAW_PART_BEGIN, &part_draw_dsc);
+        lv_obj_send_event(obj, LV_EVENT_DRAW_PART_END, &part_draw_dsc);
         return;
     }
 
@@ -426,7 +423,7 @@ static void draw_indic(lv_event_t * e)
     part_draw_dsc.rect_dsc = &draw_rect_dsc;
     part_draw_dsc.draw_area = &bar->indic_area;
 
-    lv_event_send(obj, LV_EVENT_DRAW_PART_BEGIN, &part_draw_dsc);
+    lv_obj_send_event(obj, LV_EVENT_DRAW_PART_BEGIN, &part_draw_dsc);
 
     lv_coord_t bg_radius = lv_obj_get_style_radius(obj, LV_PART_MAIN);
     lv_coord_t short_side = LV_MIN(barw, barh);
@@ -496,15 +493,23 @@ static void draw_indic(lv_event_t * e)
     int16_t mask_indic_id = lv_draw_mask_add(&mask_indic_param, NULL);
 #endif
 
-    lv_draw_rect(draw_ctx, &draw_rect_dsc, &mask_indic_max_area);
-    draw_rect_dsc.border_opa = border_opa;
-    draw_rect_dsc.shadow_opa = shadow_opa;
+    lv_area_t indic_clip_area;
+    if(_lv_area_intersect(&indic_clip_area, &indic_area, draw_ctx->clip_area)) {
+        const lv_area_t * clip_area_ori = draw_ctx->clip_area;
+        draw_ctx->clip_area = &indic_clip_area;
 
-    /*Draw the border*/
-    draw_rect_dsc.bg_opa = LV_OPA_TRANSP;
-    draw_rect_dsc.bg_img_opa = LV_OPA_TRANSP;
-    draw_rect_dsc.shadow_opa = LV_OPA_TRANSP;
-    lv_draw_rect(draw_ctx, &draw_rect_dsc, &bar->indic_area);
+        lv_draw_rect(draw_ctx, &draw_rect_dsc, &mask_indic_max_area);
+        draw_rect_dsc.border_opa = border_opa;
+        draw_rect_dsc.shadow_opa = shadow_opa;
+
+        /*Draw the border*/
+        draw_rect_dsc.bg_opa = LV_OPA_TRANSP;
+        draw_rect_dsc.bg_img_opa = LV_OPA_TRANSP;
+        draw_rect_dsc.shadow_opa = LV_OPA_TRANSP;
+        lv_draw_rect(draw_ctx, &draw_rect_dsc, &bar->indic_area);
+
+        draw_ctx->clip_area = clip_area_ori;
+    }
 
 #if LV_USE_DRAW_MASKS
     lv_draw_mask_free_param(&mask_indic_param);
@@ -513,7 +518,8 @@ static void draw_indic(lv_event_t * e)
     lv_draw_mask_remove_id(mask_bg_id);
 #endif
 
-    lv_event_send(obj, LV_EVENT_DRAW_PART_END, &part_draw_dsc);
+
+    lv_obj_send_event(obj, LV_EVENT_DRAW_PART_END, &part_draw_dsc);
 }
 
 static void lv_bar_event(const lv_obj_class_t * class_p, lv_event_t * e)
@@ -582,6 +588,8 @@ static void lv_bar_set_value_with_anim(lv_obj_t * obj, int32_t new_value, int32_
                                        _lv_bar_anim_t * anim_info, lv_anim_enable_t en)
 {
     if(en == LV_ANIM_OFF) {
+        lv_anim_del(anim_info, NULL);
+        anim_info->anim_state = LV_BAR_ANIM_STATE_INV;
         *value_ptr = new_value;
         lv_obj_invalidate((lv_obj_t *)obj);
 

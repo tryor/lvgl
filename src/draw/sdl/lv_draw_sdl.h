@@ -37,7 +37,7 @@ extern "C" {
  *      TYPEDEFS
  **********************/
 
-struct lv_draw_sdl_context_internals_t;
+struct _lv_draw_sdl_context_internals_t;
 
 typedef struct {
     /**
@@ -50,20 +50,20 @@ typedef struct {
 typedef struct {
     lv_draw_ctx_t base_draw;
     SDL_Renderer * renderer;
-    struct lv_draw_sdl_context_internals_t * internals;
+    struct _lv_draw_sdl_context_internals_t * internals;
 } lv_draw_sdl_ctx_t;
 
 /**********************
  * GLOBAL PROTOTYPES
  **********************/
 
-void lv_draw_sdl_init_ctx(lv_disp_drv_t * disp_drv, lv_draw_ctx_t * draw_ctx);
+void lv_draw_sdl_init_ctx(lv_disp_t * disp_drv, lv_draw_ctx_t * draw_ctx);
 
 /**
  * @brief Free caches
  *
  */
-void lv_draw_sdl_deinit_ctx(lv_disp_drv_t * disp_drv, lv_draw_ctx_t * draw_ctx);
+void lv_draw_sdl_deinit_ctx(lv_disp_t * disp_drv, lv_draw_ctx_t * draw_ctx);
 
 SDL_Texture * lv_draw_sdl_create_screen_texture(SDL_Renderer * renderer, lv_coord_t hor, lv_coord_t ver);
 

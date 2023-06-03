@@ -8,7 +8,9 @@
  *********************/
 #include "lv_obj.h"
 #include "lv_disp.h"
+#include "lv_disp_private.h"
 #include "../misc/lv_gc.h"
+#include LV_COLOR_EXTERN_INCLUDE
 
 /*********************
  *      DEFINES
@@ -79,6 +81,9 @@ void lv_obj_add_style(lv_obj_t * obj, const lv_style_t * style, lv_style_selecto
 
     trans_del(obj, selector, LV_STYLE_PROP_ANY, NULL);
 
+    /*Try removing the style first to be sure it won't be added twice*/
+    lv_obj_remove_style(obj, style, selector);
+
     uint32_t i;
     /*Go after the transition and local styles*/
     for(i = 0; i < obj->style_cnt; i++) {
@@ -105,6 +110,51 @@ void lv_obj_add_style(lv_obj_t * obj, const lv_style_t * style, lv_style_selecto
     obj->styles[i].selector = selector;
 
     lv_obj_refresh_style(obj, selector, LV_STYLE_PROP_ANY);
+}
+
+bool lv_obj_replace_style(struct _lv_obj_t * obj, const lv_style_t * old_style, const lv_style_t * new_style,
+                          lv_style_selector_t selector)
+{
+    lv_state_t state = lv_obj_style_get_selector_state(selector);
+    lv_part_t part = lv_obj_style_get_selector_part(selector);
+
+    /*All objects must exist*/
+    if(!obj || !old_style || !new_style || (old_style == new_style)) {
+        return false;
+    }
+
+    /*Similar to lv_obj_add_style, delete transition*/
+    trans_del(obj, selector, LV_STYLE_PROP_ANY, NULL);
+
+    bool replaced = false;
+    uint32_t i;
+    for(i = 0; i < obj->style_cnt; i++) {
+        lv_state_t state_act = lv_obj_style_get_selector_state(obj->styles[i].selector);
+        lv_part_t part_act = lv_obj_style_get_selector_part(obj->styles[i].selector);
+
+        /*Skip local styles and transitions*/
+        if(obj->styles[i].is_local || obj->styles[i].is_trans) {
+            continue;
+        }
+
+        /*Skip non-matching styles*/
+        if((state != LV_STATE_ANY && state_act != state) ||
+           (part != LV_PART_ANY && part_act != part) ||
+           (old_style != obj->styles[i].style)) {
+            continue;
+        }
+
+        lv_memzero(&obj->styles[i], sizeof(_lv_obj_style_t));
+        obj->styles[i].style = new_style;
+        obj->styles[i].selector = selector;
+
+        replaced = true;
+        /*Don't break and continue replacing other occurrences*/
+    }
+    if(replaced) {
+        lv_obj_refresh_style(obj, part, LV_STYLE_PROP_ANY);
+    }
+    return replaced;
 }
 
 void lv_obj_remove_style(lv_obj_t * obj, const lv_style_t * style, lv_style_selector_t selector)
@@ -193,7 +243,7 @@ void lv_obj_refresh_style(lv_obj_t * obj, lv_style_selector_t selector, lv_style
            part == LV_PART_MAIN ||
            lv_obj_get_style_height(obj, 0) == LV_SIZE_CONTENT ||
            lv_obj_get_style_width(obj, 0) == LV_SIZE_CONTENT) {
-            lv_event_send(obj, LV_EVENT_STYLE_CHANGED, NULL);
+            lv_obj_send_event(obj, LV_EVENT_STYLE_CHANGED, NULL);
             lv_obj_mark_layout_as_dirty(obj);
         }
     }
@@ -344,7 +394,7 @@ void _lv_obj_style_create_transition(lv_obj_t * obj, lv_part_t part, lv_state_t 
     lv_style_value_t v2 = lv_obj_get_style_prop(obj, part, tr_dsc->prop);
     obj->skip_trans = 0;
 
-    if(v1.ptr == v2.ptr && v1.num == v2.num && v1.color.full == v2.color.full)  return;
+    if(v1.ptr == v2.ptr && v1.num == v2.num && lv_color_eq(v1.color, v2.color))  return;
     obj->state = prev_state;
     v1 = lv_obj_get_style_prop(obj, part, tr_dsc->prop);
     obj->state = new_state;
@@ -381,9 +431,7 @@ void _lv_obj_style_create_transition(lv_obj_t * obj, lv_part_t part, lv_state_t 
     lv_anim_set_delay(&a, tr_dsc->delay);
     lv_anim_set_path_cb(&a, tr_dsc->path_cb);
     lv_anim_set_early_apply(&a, false);
-#if LV_USE_USER_DATA
-    a.user_data = tr_dsc->user_data;
-#endif
+    lv_anim_set_user_data(&a, tr_dsc->user_data);
     lv_anim_start(&a);
 }
 
@@ -683,7 +731,7 @@ static void refresh_children_style(lv_obj_t * obj)
     for(i = 0; i < child_cnt; i++) {
         lv_obj_t * child = obj->spec_attr->children[i];
         lv_obj_invalidate(child);
-        lv_event_send(child, LV_EVENT_STYLE_CHANGED, NULL);
+        lv_obj_send_event(child, LV_EVENT_STYLE_CHANGED, NULL);
         lv_obj_invalidate(child);
 
         refresh_children_style(child); /*Check children too*/
@@ -742,7 +790,7 @@ static void trans_anim_cb(void * _tr, int32_t v)
     for(i = 0; i < obj->style_cnt; i++) {
         if(obj->styles[i].is_trans == 0 || obj->styles[i].selector != tr->selector) continue;
 
-        lv_style_value_t value_final;
+        lv_style_value_t value_final = {0};
         switch(tr->prop) {
 
             case LV_STYLE_BORDER_SIDE:
@@ -763,6 +811,7 @@ static void trans_anim_cb(void * _tr, int32_t v)
                 else value_final.ptr = tr->end_value.ptr;
                 break;
             case LV_STYLE_BG_COLOR:
+            case LV_STYLE_BG_GRAD_COLOR:
             case LV_STYLE_BORDER_COLOR:
             case LV_STYLE_TEXT_COLOR:
             case LV_STYLE_SHADOW_COLOR:
@@ -770,7 +819,7 @@ static void trans_anim_cb(void * _tr, int32_t v)
             case LV_STYLE_IMG_RECOLOR:
                 if(v <= 0) value_final.color = tr->start_value.color;
                 else if(v >= 255) value_final.color = tr->end_value.color;
-                else value_final.color = lv_color_mix(tr->end_value.color, tr->start_value.color, v);
+                else value_final.color = LV_COLOR_MIX(tr->end_value.color, tr->start_value.color, v);
                 break;
 
             default:
@@ -783,7 +832,7 @@ static void trans_anim_cb(void * _tr, int32_t v)
         lv_style_value_t old_value;
         bool refr = true;
         if(lv_style_get_prop(obj->styles[i].style, tr->prop, &old_value)) {
-            if(value_final.ptr == old_value.ptr && value_final.color.full == old_value.color.full &&
+            if(value_final.ptr == old_value.ptr && lv_color_eq(value_final.color, old_value.color) &&
                value_final.num == old_value.num) {
                 refr = false;
             }

@@ -52,7 +52,7 @@ typedef struct {
     char * cand_str;            /* Candidate string */
     char   input_char[16];      /* Input box character */
 #if LV_IME_PINYIN_USE_K9_MODE
-    char   k9_input_str[LV_IME_PINYIN_K9_MAX_INPUT]; /* 9-key input(k9) mode input string */
+    char   k9_input_str[LV_IME_PINYIN_K9_MAX_INPUT + 1]; /* 9-key input(k9) mode input string */
     uint16_t k9_py_ll_pos;      /* Current pinyin map pages(k9) */
     uint16_t k9_legal_py_count; /* Count of legal Pinyin numbers(k9) */
     uint16_t k9_input_str_len;  /* 9-key input(k9) mode input string max len */
@@ -83,7 +83,7 @@ lv_obj_t * lv_ime_pinyin_create(lv_obj_t * parent);
 /**
  * Set the keyboard of Pinyin input method.
  * @param obj  pointer to a Pinyin input method object
- * @param dict pointer to a Pinyin input method keyboard
+ * @param kb pointer to a Pinyin input method keyboard
  */
 void lv_ime_pinyin_set_keyboard(lv_obj_t * obj, lv_obj_t * kb);
 

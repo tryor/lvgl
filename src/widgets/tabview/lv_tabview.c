@@ -10,6 +10,7 @@
 #if LV_USE_TABVIEW
 
 #include "../../misc/lv_assert.h"
+#include "../../core/lv_indev_private.h"
 
 /*********************
  *      DEFINES
@@ -83,8 +84,10 @@ lv_obj_t * lv_tabview_add_tab(lv_obj_t * obj, const char * name)
     if(tabview->tab_pos & LV_DIR_VER) {
         new_map = lv_malloc((tab_id + 1) * sizeof(const char *));
         lv_memcpy(new_map, old_map, sizeof(const char *) * (tab_id - 1));
-        new_map[tab_id - 1] = lv_malloc(strlen(name) + 1);
-        strcpy((char *)new_map[tab_id - 1], name);
+        size_t len = lv_strlen(name) + 1;
+        new_map[tab_id - 1] = lv_malloc(len);
+        LV_ASSERT_MALLOC(new_map[tab_id - 1]);
+        lv_strcpy((char *)new_map[tab_id - 1], name);
         new_map[tab_id] = (char *)"";
     }
     /*left or right dir*/
@@ -92,15 +95,18 @@ lv_obj_t * lv_tabview_add_tab(lv_obj_t * obj, const char * name)
         new_map = lv_malloc((tab_id * 2) * sizeof(const char *));
         lv_memcpy(new_map, old_map, sizeof(const char *) * (tab_id - 1) * 2);
         if(tabview->tab_cnt == 0) {
-            new_map[0] = lv_malloc(strlen(name) + 1);
-            strcpy((char *)new_map[0], name);
+            size_t len = lv_strlen(name) + 1;
+            new_map[0] = lv_malloc(len);
+            LV_ASSERT_MALLOC(new_map[0]);
+            lv_strcpy((char *)new_map[0], name);
             new_map[1] = (char *)"";
         }
         else {
+            size_t len = lv_strlen(name) + 1;
             new_map[tab_id * 2 - 3] = (char *)"\n";
-            new_map[tab_id * 2 - 2] = lv_malloc(strlen(name) + 1);
+            new_map[tab_id * 2 - 2] = lv_malloc(len);
             new_map[tab_id * 2 - 1] = (char *)"";
-            strcpy((char *)new_map[(tab_id * 2) - 2], name);
+            lv_strcpy((char *)new_map[(tab_id * 2) - 2], name);
         }
     }
     tabview->map = new_map;
@@ -129,8 +135,10 @@ void lv_tabview_rename_tab(lv_obj_t * obj, uint32_t id, const char * new_name)
     if(tabview->tab_pos & LV_DIR_HOR) id *= 2;
 
     lv_free(tabview->map[id]);
-    tabview->map[id] = lv_malloc(strlen(new_name) + 1);
-    strcpy(tabview->map[id], new_name);
+    size_t len = lv_strlen(new_name) + 1;
+    tabview->map[id] = lv_malloc(len);
+    LV_ASSERT_MALLOC(tabview->map[id]);
+    lv_strcpy(tabview->map[id], new_name);
     lv_obj_invalidate(obj);
 }
 
@@ -226,10 +234,10 @@ static void lv_tabview_constructor(const lv_obj_class_t * class_p, lv_obj_t * ob
     tabview->map = lv_malloc(sizeof(const char *));
     tabview->map[0] = (char *)"";
     lv_btnmatrix_set_map(btnm, (const char **)tabview->map);
-    lv_obj_add_event_cb(btnm, btns_value_changed_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event(btnm, btns_value_changed_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_flag(btnm, LV_OBJ_FLAG_EVENT_BUBBLE);
 
-    lv_obj_add_event_cb(cont, cont_scroll_end_event_cb, LV_EVENT_ALL, NULL);
+    lv_obj_add_event(cont, cont_scroll_end_event_cb, LV_EVENT_ALL, NULL);
     lv_obj_set_scrollbar_mode(cont, LV_SCROLLBAR_MODE_OFF);
 
     switch(tabview->tab_pos) {
@@ -322,7 +330,7 @@ static void cont_scroll_end_event_cb(lv_event_t * e)
     }
     else if(code == LV_EVENT_SCROLL_END) {
         lv_indev_t * indev = lv_indev_get_act();
-        if(indev && indev->proc.state == LV_INDEV_STATE_PRESSED) {
+        if(indev && indev->state == LV_INDEV_STATE_PRESSED) {
             return;
         }
 
@@ -343,9 +351,17 @@ static void cont_scroll_end_event_cb(lv_event_t * e)
         if(t < 0) t = 0;
         bool new_tab = false;
         if(t != lv_tabview_get_tab_act(tv)) new_tab = true;
-        lv_tabview_set_act(tv, t, LV_ANIM_ON);
 
-        if(new_tab) lv_event_send(tv, LV_EVENT_VALUE_CHANGED, NULL);
+
+        /*If not scrolled by an indev set the tab immediately*/
+        if(lv_indev_get_act()) {
+            lv_tabview_set_act(tv, t, LV_ANIM_ON);
+        }
+        else {
+            lv_tabview_set_act(tv, t, LV_ANIM_OFF);
+        }
+
+        if(new_tab) lv_obj_send_event(tv, LV_EVENT_VALUE_CHANGED, NULL);
     }
 }
 #endif /*LV_USE_TABVIEW*/

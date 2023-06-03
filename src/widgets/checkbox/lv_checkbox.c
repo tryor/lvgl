@@ -68,21 +68,30 @@ lv_obj_t * lv_checkbox_create(lv_obj_t * parent)
 void lv_checkbox_set_text(lv_obj_t * obj, const char * txt)
 {
     lv_checkbox_t * cb = (lv_checkbox_t *)obj;
+
+    if(NULL != txt) {
+        size_t len;
+
 #if LV_USE_ARABIC_PERSIAN_CHARS
-    size_t len = _lv_txt_ap_calc_bytes_cnt(txt);
+        len = _lv_txt_ap_calc_bytes_cnt(txt) + 1;
 #else
-    size_t len = strlen(txt);
+        len = lv_strlen(txt) + 1;
 #endif
 
-    if(!cb->static_txt) cb->txt = lv_realloc(cb->txt, len + 1);
-    else  cb->txt = lv_malloc(len + 1);
+        if(!cb->static_txt) cb->txt = lv_realloc(cb->txt, len);
+        else cb->txt = lv_malloc(len);
+
+        LV_ASSERT_MALLOC(cb->txt);
+        if(NULL == cb->txt) return;
+
 #if LV_USE_ARABIC_PERSIAN_CHARS
-    _lv_txt_ap_proc(txt, cb->txt);
+        _lv_txt_ap_proc(txt, cb->txt);
 #else
-    strcpy(cb->txt, txt);
+        lv_strcpy(cb->txt, txt);
 #endif
 
-    cb->static_txt = 0;
+        cb->static_txt = 0;
+    }
 
     lv_obj_refresh_self_size(obj);
     lv_obj_invalidate(obj);
@@ -223,10 +232,7 @@ static void lv_checkbox_draw(lv_event_t * e)
 
     lv_area_t marker_area_transf;
     lv_area_copy(&marker_area_transf, &marker_area);
-    marker_area_transf.x1 -= transf_w;
-    marker_area_transf.x2 += transf_w;
-    marker_area_transf.y1 -= transf_h;
-    marker_area_transf.y2 += transf_h;
+    lv_area_increase(&marker_area_transf, transf_w, transf_h);
 
     lv_obj_draw_part_dsc_t part_draw_dsc;
     lv_obj_draw_dsc_init(&part_draw_dsc, draw_ctx);
@@ -236,9 +242,9 @@ static void lv_checkbox_draw(lv_event_t * e)
     part_draw_dsc.draw_area = &marker_area_transf;
     part_draw_dsc.part = LV_PART_INDICATOR;
 
-    lv_event_send(obj, LV_EVENT_DRAW_PART_BEGIN, &part_draw_dsc);
+    lv_obj_send_event(obj, LV_EVENT_DRAW_PART_BEGIN, &part_draw_dsc);
     lv_draw_rect(draw_ctx, &indic_dsc, &marker_area_transf);
-    lv_event_send(obj, LV_EVENT_DRAW_PART_END, &part_draw_dsc);
+    lv_obj_send_event(obj, LV_EVENT_DRAW_PART_END, &part_draw_dsc);
 
     lv_coord_t line_space = lv_obj_get_style_text_line_space(obj, LV_PART_MAIN);
     lv_coord_t letter_space = lv_obj_get_style_text_letter_space(obj, LV_PART_MAIN);

@@ -76,6 +76,7 @@ extern "C" {
 #include "src/widgets/win/lv_win.h"
 
 #include "src/others/snapshot/lv_snapshot.h"
+#include "src/others/sysmon/lv_sysmon.h"
 #include "src/others/monkey/lv_monkey.h"
 #include "src/others/gridnav/lv_gridnav.h"
 #include "src/others/fragment/lv_fragment.h"
@@ -84,6 +85,7 @@ extern "C" {
 #include "src/others/ime/lv_ime_pinyin.h"
 #include "src/others/file_explorer/lv_file_explorer.h"
 
+#include "src/libs/barcode/lv_barcode.h"
 #include "src/libs/bmp/lv_bmp.h"
 #include "src/libs/fsdrv/lv_fsdrv.h"
 #include "src/libs/png/lv_png.h"
@@ -94,8 +96,8 @@ extern "C" {
 #include "src/libs/rlottie/lv_rlottie.h"
 #include "src/libs/ffmpeg/lv_ffmpeg.h"
 #include "src/libs/tiny_ttf/lv_tiny_ttf.h"
-#include "src/layouts/flex/lv_flex.h"
-#include "src/layouts/grid/lv_grid.h"
+
+#include "src/layouts/lv_layouts.h"
 
 #include "src/draw/lv_draw.h"
 
@@ -103,13 +105,22 @@ extern "C" {
 
 #include "src/lv_api_map.h"
 
-/*-----------------
- * EXTRAS
- *----------------*/
+#include "src/dev/sdl/lv_sdl_window.h"
+#include "src/dev/sdl/lv_sdl_mouse.h"
+#include "src/dev/sdl/lv_sdl_mousewheel.h"
+#include "src/dev/sdl/lv_sdl_keyboard.h"
+
+#include "src/dev/disp/drm/lv_linux_drm.h"
+#include "src/dev/disp/fb/lv_linux_fbdev.h"
+
+#include "src/lvgl_private.h"
 
 /*********************
  *      DEFINES
  *********************/
+#ifndef LV_USE_DEV_VERSION
+#warning "You are using the development version of LVGL which is not stable at this moment. For production use the release/v8.3 branch. To silence this warning add #define LV_USE_DEV_VERSION to lv_conf.h"
+#endif
 
 /**********************
  *      TYPEDEFS

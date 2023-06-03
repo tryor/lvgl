@@ -9,7 +9,7 @@
 #include "lv_draw.h"
 #include "lv_draw_label.h"
 #include "../misc/lv_math.h"
-#include "../hal/lv_hal_disp.h"
+#include "../core/lv_disp.h"
 #include "../core/lv_refr.h"
 #include "../misc/lv_bidi.h"
 #include "../misc/lv_assert.h"
@@ -272,7 +272,7 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_label(lv_draw_ctx_t * draw_ctx, const lv_draw
                             recolor = lv_color_make(r, g, b);
                         }
                         else {
-                            recolor.full = dsc->color.full;
+                            recolor = dsc->color;
                         }
                         cmd_state = CMD_STATE_IN; /*After the parameter the text is in the command*/
                     }
@@ -364,7 +364,9 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_label(lv_draw_ctx_t * draw_ctx, const lv_draw
 void lv_draw_letter(lv_draw_ctx_t * draw_ctx, const lv_draw_label_dsc_t * dsc,  const lv_point_t * pos_p,
                     uint32_t letter)
 {
+    LV_PROFILER_BEGIN;
     draw_ctx->draw_letter(draw_ctx, dsc, pos_p, letter);
+    LV_PROFILER_END;
 }
 
 

@@ -8,12 +8,15 @@
  *********************/
 #include "lv_obj.h"
 #include "lv_indev.h"
+#include "lv_indev_private.h"
 #include "lv_refr.h"
 #include "lv_group.h"
 #include "lv_disp.h"
+#include "lv_disp_private.h"
 #include "lv_theme.h"
 #include "../misc/lv_assert.h"
 #include "../draw/lv_draw.h"
+#include "../draw/lv_img_cache_builtin.h"
 #include "../misc/lv_anim.h"
 #include "../misc/lv_timer.h"
 #include "../misc/lv_async.h"
@@ -157,10 +160,14 @@ void lv_init(void)
     /*Initialize the screen refresh system*/
     _lv_refr_init();
 
-    _lv_img_decoder_init();
-#if LV_IMG_CACHE_DEF_SIZE
-    lv_img_cache_set_size(LV_IMG_CACHE_DEF_SIZE);
+#if LV_USE_SYSMON
+    _lv_sysmon_builtin_init();
 #endif
+
+    _lv_img_decoder_init();
+
+    _lv_img_cache_builtin_init();
+
     /*Test if the IDE has UTF-8 encoding*/
     const char * txt = "Á";
 
@@ -425,8 +432,6 @@ void lv_obj_allocate_spec_attr(lv_obj_t * obj)
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
     if(obj->spec_attr == NULL) {
-        static uint32_t x = 0;
-        x++;
         obj->spec_attr = lv_malloc(sizeof(_lv_obj_spec_attr_t));
         LV_ASSERT_MALLOC(obj->spec_attr);
         if(obj->spec_attr == NULL) return;
@@ -535,9 +540,10 @@ static void lv_obj_destructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
             lv_free(obj->spec_attr->children);
             obj->spec_attr->children = NULL;
         }
-        if(obj->spec_attr->event_dsc) {
-            lv_free(obj->spec_attr->event_dsc);
-            obj->spec_attr->event_dsc = NULL;
+        if(obj->spec_attr->event_list.dsc) {
+            lv_free(obj->spec_attr->event_list.dsc);
+            obj->spec_attr->event_list.dsc = NULL;
+            obj->spec_attr->event_list.cnt = 0;
         }
 
         lv_free(obj->spec_attr);
@@ -563,10 +569,7 @@ static void lv_obj_draw(lv_event_t * e)
         lv_coord_t h = lv_obj_get_style_transform_height(obj, LV_PART_MAIN);
         lv_area_t coords;
         lv_area_copy(&coords, &obj->coords);
-        coords.x1 -= w;
-        coords.x2 += w;
-        coords.y1 -= h;
-        coords.y2 += h;
+        lv_area_increase(&coords, w, h);
 
         if(_lv_area_is_in(info->area, &coords, r) == false) {
             info->res = LV_COVER_RES_NOT_COVER;
@@ -595,10 +598,7 @@ static void lv_obj_draw(lv_event_t * e)
         lv_coord_t h = lv_obj_get_style_transform_height(obj, LV_PART_MAIN);
         lv_area_t coords;
         lv_area_copy(&coords, &obj->coords);
-        coords.x1 -= w;
-        coords.x2 += w;
-        coords.y1 -= h;
-        coords.y2 += h;
+        lv_area_increase(&coords, w, h);
 
         lv_obj_draw_part_dsc_t part_dsc;
         lv_obj_draw_dsc_init(&part_dsc, draw_ctx);
@@ -607,7 +607,7 @@ static void lv_obj_draw(lv_event_t * e)
         part_dsc.rect_dsc = &draw_dsc;
         part_dsc.draw_area = &coords;
         part_dsc.part = LV_PART_MAIN;
-        lv_event_send(obj, LV_EVENT_DRAW_PART_BEGIN, &part_dsc);
+        lv_obj_send_event(obj, LV_EVENT_DRAW_PART_BEGIN, &part_dsc);
 
 #if LV_USE_DRAW_MASKS
         /*With clip corner enabled draw the bg img separately to make it clipped*/
@@ -639,7 +639,7 @@ static void lv_obj_draw(lv_event_t * e)
 
         }
 #endif
-        lv_event_send(obj, LV_EVENT_DRAW_PART_END, &part_dsc);
+        lv_obj_send_event(obj, LV_EVENT_DRAW_PART_END, &part_dsc);
     }
     else if(code == LV_EVENT_DRAW_POST) {
         lv_draw_ctx_t * draw_ctx = lv_event_get_draw_ctx(e);
@@ -669,10 +669,7 @@ static void lv_obj_draw(lv_event_t * e)
             lv_coord_t h = lv_obj_get_style_transform_height(obj, LV_PART_MAIN);
             lv_area_t coords;
             lv_area_copy(&coords, &obj->coords);
-            coords.x1 -= w;
-            coords.x2 += w;
-            coords.y1 -= h;
-            coords.y2 += h;
+            lv_area_increase(&coords, w, h);
 
             lv_obj_draw_part_dsc_t part_dsc;
             lv_obj_draw_dsc_init(&part_dsc, draw_ctx);
@@ -681,10 +678,10 @@ static void lv_obj_draw(lv_event_t * e)
             part_dsc.rect_dsc = &draw_dsc;
             part_dsc.draw_area = &coords;
             part_dsc.part = LV_PART_MAIN;
-            lv_event_send(obj, LV_EVENT_DRAW_PART_BEGIN, &part_dsc);
+            lv_obj_send_event(obj, LV_EVENT_DRAW_PART_BEGIN, &part_dsc);
 
             lv_draw_rect(draw_ctx, &draw_dsc, &coords);
-            lv_event_send(obj, LV_EVENT_DRAW_PART_END, &part_dsc);
+            lv_obj_send_event(obj, LV_EVENT_DRAW_PART_END, &part_dsc);
         }
     }
 }
@@ -711,16 +708,16 @@ static void draw_scrollbar(lv_obj_t * obj, lv_draw_ctx_t * draw_ctx)
 
     if(lv_area_get_size(&hor_area) > 0) {
         part_dsc.draw_area = &hor_area;
-        lv_event_send(obj, LV_EVENT_DRAW_PART_BEGIN, &part_dsc);
+        lv_obj_send_event(obj, LV_EVENT_DRAW_PART_BEGIN, &part_dsc);
         lv_draw_rect(draw_ctx, &draw_dsc, &hor_area);
-        lv_event_send(obj, LV_EVENT_DRAW_PART_END, &part_dsc);
+        lv_obj_send_event(obj, LV_EVENT_DRAW_PART_END, &part_dsc);
     }
     if(lv_area_get_size(&ver_area) > 0) {
         part_dsc.draw_area = &ver_area;
-        lv_event_send(obj, LV_EVENT_DRAW_PART_BEGIN, &part_dsc);
+        lv_obj_send_event(obj, LV_EVENT_DRAW_PART_BEGIN, &part_dsc);
         part_dsc.draw_area = &ver_area;
         lv_draw_rect(draw_ctx, &draw_dsc, &ver_area);
-        lv_event_send(obj, LV_EVENT_DRAW_PART_END, &part_dsc);
+        lv_obj_send_event(obj, LV_EVENT_DRAW_PART_END, &part_dsc);
     }
 }
 
@@ -799,7 +796,7 @@ static void lv_obj_event(const lv_obj_class_t * class_p, lv_event_t * e)
             if(!(lv_obj_get_state(obj) & LV_STATE_CHECKED)) lv_obj_add_state(obj, LV_STATE_CHECKED);
             else lv_obj_clear_state(obj, LV_STATE_CHECKED);
 
-            lv_res_t res = lv_event_send(obj, LV_EVENT_VALUE_CHANGED, NULL);
+            lv_res_t res = lv_obj_send_event(obj, LV_EVENT_VALUE_CHANGED, NULL);
             if(res != LV_RES_OK) return;
         }
     }
@@ -825,7 +822,7 @@ static void lv_obj_event(const lv_obj_class_t * class_p, lv_event_t * e)
 
             /*With Enter LV_EVENT_RELEASED will send VALUE_CHANGE event*/
             if(c != LV_KEY_ENTER) {
-                lv_res_t res = lv_event_send(obj, LV_EVENT_VALUE_CHANGED, NULL);
+                lv_res_t res = lv_obj_send_event(obj, LV_EVENT_VALUE_CHANGED, NULL);
                 if(res != LV_RES_OK) return;
             }
         }
@@ -990,9 +987,7 @@ static void lv_obj_set_state(lv_obj_t * obj, lv_state_t new_state)
                 ts[tsi].delay = tr->delay;
                 ts[tsi].path_cb = tr->path_xcb;
                 ts[tsi].prop = tr->props[j];
-#if LV_USE_USER_DATA
                 ts[tsi].user_data = tr->user_data;
-#endif
                 ts[tsi].selector = obj_style->selector;
                 tsi++;
             }
@@ -1007,7 +1002,9 @@ static void lv_obj_set_state(lv_obj_t * obj, lv_state_t new_state)
     lv_free(ts);
 
     if(cmp_res == _LV_STYLE_STATE_CMP_DIFF_REDRAW) {
-        lv_obj_invalidate(obj);
+        //        lv_obj_invalidate(obj);
+        /*Invalidation is not enough, e.g. layer type needs to be updated too*/
+        lv_obj_refresh_style(obj, LV_PART_ANY, LV_STYLE_PROP_ANY);
     }
     else if(cmp_res == _LV_STYLE_STATE_CMP_DIFF_LAYOUT) {
         lv_obj_refresh_style(obj, LV_PART_ANY, LV_STYLE_PROP_ANY);

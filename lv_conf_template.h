@@ -23,7 +23,7 @@
    COLOR SETTINGS
  *====================*/
 
-/*Color depth: 1 (1 byte per pixel), 8 (RGB332), 16 (RGB565), 32 (ARGB8888)*/
+/*Color depth: 1 (1 byte per pixel), 8 (RGB332), 16 (RGB565), 24 (RGB888), 32 (ARGB8888)*/
 #define LV_COLOR_DEPTH 16
 
 #define LV_COLOR_CHROMA_KEY lv_color_hex(0x00ff00)
@@ -36,7 +36,10 @@
 #define LV_USE_BUILTIN_MALLOC 1
 #if LV_USE_BUILTIN_MALLOC
     /*Size of the memory available for `lv_malloc()` in bytes (>= 2kB)*/
-    #define LV_MEM_SIZE (128U * 1024U)          /*[bytes]*/
+    #define LV_MEM_SIZE (48U * 1024U)          /*[bytes]*/
+
+    /*Size of the memory expand for `lv_malloc()` in bytes*/
+    #define LV_MEM_POOL_EXPAND_SIZE 0
 
     /*Set an address for the memory pool instead of allocating it as a normal array. Can be in external SRAM too.*/
     #define LV_MEM_ADR 0     /*0: unused*/
@@ -47,7 +50,7 @@
     #endif
 #endif  /*LV_USE_BUILTIN_MALLOC*/
 
-/*Enable lv_memcpy_builtin, lv_memset_builtin, lv_strlen_builtin, lv_strncpy_builtin*/
+/*Enable lv_memcpy_builtin, lv_memset_builtin, lv_strlen_builtin, lv_strncpy_builtin, lv_strcpy_builtin*/
 #define LV_USE_BUILTIN_MEMCPY 1
 
 /*Enable and configure the built-in (v)snprintf */
@@ -57,6 +60,8 @@
 #endif  /*LV_USE_BUILTIN_SNPRINTF*/
 
 #define LV_STDLIB_INCLUDE <stdint.h>
+#define LV_STDIO_INCLUDE  <stdint.h>
+#define LV_STRING_INCLUDE <stdint.h>
 #define LV_MALLOC       lv_malloc_builtin
 #define LV_REALLOC      lv_realloc_builtin
 #define LV_FREE         lv_free_builtin
@@ -66,10 +71,19 @@
 #define LV_VSNPRINTF    lv_vsnprintf_builtin
 #define LV_STRLEN       lv_strlen_builtin
 #define LV_STRNCPY      lv_strncpy_builtin
+#define LV_STRCPY       lv_strcpy_builtin
+
+#define LV_COLOR_EXTERN_INCLUDE <stdint.h>
+#define LV_COLOR_MIX      lv_color_mix
+#define LV_COLOR_PREMULT      lv_color_premult
+#define LV_COLOR_MIX_PREMULT      lv_color_mix_premult
 
 /*====================
    HAL SETTINGS
  *====================*/
+
+/*Default display refresh, input device read and animation step period.*/
+#define LV_DEF_REFR_PERIOD  33      /*[ms]*/
 
 /*Use a custom tick source that tells the elapsed time in milliseconds.
  *It removes the need to manually update the tick with `lv_tick_inc()`)*/
@@ -77,6 +91,9 @@
 #if LV_TICK_CUSTOM
     #define LV_TICK_CUSTOM_INCLUDE "Arduino.h"         /*Header for the system time function*/
     #define LV_TICK_CUSTOM_SYS_TIME_EXPR (millis())    /*Expression evaluating to current system time in ms*/
+    /*If using lvgl as ESP32 component*/
+    // #define LV_TICK_CUSTOM_INCLUDE "esp_timer.h"
+    // #define LV_TICK_CUSTOM_SYS_TIME_EXPR ((esp_timer_get_time() / 1000LL))
 #endif   /*LV_TICK_CUSTOM*/
 
 /*Default Dot Per Inch. Used to initialize default sizes such as widgets sized, style paddings.
@@ -237,6 +254,7 @@
     #define LV_LOG_TRACE_OBJ_CREATE 1
     #define LV_LOG_TRACE_LAYOUT     1
     #define LV_LOG_TRACE_ANIM       1
+	#define LV_LOG_TRACE_MSG		1
 
 #endif  /*LV_USE_LOG*/
 
@@ -260,14 +278,19 @@
  * Others
  *-----------*/
 
-/*1: Show CPU usage and FPS count*/
+/*1: Show CPU usage and FPS count
+ * Requires `LV_USE_SYSMON = 1`*/
 #define LV_USE_PERF_MONITOR 0
 #if LV_USE_PERF_MONITOR
     #define LV_USE_PERF_MONITOR_POS LV_ALIGN_BOTTOM_RIGHT
+
+    /*0: Displays performance data on the screen, 1: Prints performance data using log.*/
+    #define LV_USE_PERF_MONITOR_LOG_MODE 0
 #endif
 
 /*1: Show the used memory and the memory fragmentation
- * Requires `LV_USE_BUILTIN_MALLOC = 1`*/
+ * Requires `LV_USE_BUILTIN_MALLOC = 1`
+ * Requires `LV_USE_SYSMON = 1`*/
 #define LV_USE_MEM_MONITOR 0
 #if LV_USE_MEM_MONITOR
     #define LV_USE_MEM_MONITOR_POS LV_ALIGN_BOTTOM_LEFT
@@ -279,8 +302,6 @@
 /*Maximum buffer size to allocate for rotation.
  *Only used if software rotation is enabled in the display driver.*/
 #define LV_DISP_ROT_MAX_BUF (10*1024)
-
-#define LV_USE_USER_DATA 1
 
 /*Garbage Collector settings
  *Used if lvgl is bound to higher level language and the memory is managed by that language*/
@@ -628,21 +649,27 @@
 /*QR code library*/
 #define LV_USE_QRCODE 0
 
+/*Barcode code library*/
+#define LV_USE_BARCODE 0
+
 /*FreeType library*/
 #define LV_USE_FREETYPE 0
 #if LV_USE_FREETYPE
-    /*Memory used by FreeType to cache characters [bytes] (-1: no caching)*/
-    #define LV_FREETYPE_CACHE_SIZE (16 * 1024)
-    #if LV_FREETYPE_CACHE_SIZE >= 0
-        /* 1: bitmap cache use the sbit cache, 0:bitmap cache use the image cache. */
-        /* sbit cache:it is much more memory efficient for small bitmaps(font size < 256) */
-        /* if font size >= 256, must be configured as image cache */
-        #define LV_FREETYPE_SBIT_CACHE 0
-        /* Maximum number of opened FT_Face/FT_Size objects managed by this cache instance. */
-        /* (0:use system defaults) */
-        #define LV_FREETYPE_CACHE_FT_FACES 0
-        #define LV_FREETYPE_CACHE_FT_SIZES 0
-    #endif
+    /*Memory used by FreeType to cache characters [bytes]*/
+    #define LV_FREETYPE_CACHE_SIZE (64 * 1024)
+
+    /*Let FreeType to use LVGL memory and file porting*/
+    #define LV_FREETYPE_USE_LVGL_PORT 0
+
+    /* 1: bitmap cache use the sbit cache, 0:bitmap cache use the image cache. */
+    /* sbit cache:it is much more memory efficient for small bitmaps(font size < 256) */
+    /* if font size >= 256, must be configured as image cache */
+    #define LV_FREETYPE_SBIT_CACHE 0
+
+    /* Maximum number of opened FT_Face/FT_Size objects managed by this cache instance. */
+    /* (0:use system defaults) */
+    #define LV_FREETYPE_CACHE_FT_FACES 4
+    #define LV_FREETYPE_CACHE_FT_SIZES 4
 #endif
 
 /* Built-in TTF decoder */
@@ -669,6 +696,22 @@
 
 /*1: Enable API to take snapshot for object*/
 #define LV_USE_SNAPSHOT 0
+
+/*1: Enable system monitor component*/
+#define LV_USE_SYSMON 0
+
+/*1: Enable the runtime performance profiler*/
+#define LV_USE_PROFILER 0
+#if LV_USE_PROFILER
+    /*Header to include for the profiler*/
+    #define LV_PROFILER_INCLUDE <stdint.h>
+
+    /*Profiler start point function*/
+    #define LV_PROFILER_BEGIN
+
+    /*Profiler end point function*/
+    #define LV_PROFILER_END
+#endif
 
 /*1: Enable Monkey test*/
 #define LV_USE_MONKEY 0
@@ -722,6 +765,31 @@
 #endif
 
 /*==================
+ * DEVICES
+ *==================*/
+
+/*Use SDL to open window on PC and handle mouse and keyboard*/
+#define LV_USE_SDL              0
+#if LV_USE_SDL
+    #define LV_SDL_INCLUDE_PATH    <SDL2/SDL.h>
+    #define LV_SDL_PARTIAL_MODE    0    /*Recommended only to emulate a setup with a display controller*/
+    #define LV_SDL_FULLSCREEN      0
+    #define LV_SDL_DIRECT_EXIT     1    /*1: Exit the application when all SDL widows are closed*/
+#endif
+
+/*Driver for /dev/fb*/
+#define LV_USE_LINUX_FBDEV      0
+#if LV_USE_LINUX_FBDEV
+    #define LV_LINUX_FBDEV_BSD  0
+#endif
+
+/*Driver for /dev/dri/card*/
+#define LV_USE_LINUX_DRM        0
+
+/*Interface for TFT_eSPI*/
+#define LV_USE_TFT_ESPI         0
+
+/*==================
 * EXAMPLES
 *==================*/
 
@@ -760,6 +828,9 @@
     #define LV_DEMO_MUSIC_LARGE     0
     #define LV_DEMO_MUSIC_AUTO_PLAY 0
 #endif
+
+/*Flex layout demo*/
+#define LV_USE_DEMO_FLEX_LAYOUT 0
 
 /*--END OF LV_CONF_H--*/
 

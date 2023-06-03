@@ -30,18 +30,24 @@ extern "C" {
 /**********************
  *      TYPEDEFS
  **********************/
-
-enum {
+enum _lv_slider_mode_t {
     LV_SLIDER_MODE_NORMAL = LV_BAR_MODE_NORMAL,
     LV_SLIDER_MODE_SYMMETRICAL = LV_BAR_MODE_SYMMETRICAL,
     LV_SLIDER_MODE_RANGE = LV_BAR_MODE_RANGE
 };
+
+#ifdef DOXYGEN
+typedef _lv_slider_mode_t lv_slider_mode_t;
+#else
 typedef uint8_t lv_slider_mode_t;
+#endif /*DOXYGEN*/
+
 
 typedef struct {
     lv_bar_t bar;       /*Add the ancestor's type first*/
     lv_area_t left_knob_area;
     lv_area_t right_knob_area;
+    lv_point_t pressed_point;
     int32_t * value_to_set; /*Which bar value to set*/
     uint8_t dragging : 1;       /*1: the slider is being dragged*/
     uint8_t left_knob_focus : 1; /*1: with encoder now the right knob can be adjusted*/
@@ -169,7 +175,7 @@ bool lv_slider_is_dragged(const lv_obj_t * obj);
 
 /**
  * Get the mode of the slider.
- * @param obj       pointer to a bar object
+ * @param slider       pointer to a bar object
  * @return          see ::lv_slider_mode_t
  */
 static inline lv_slider_mode_t lv_slider_get_mode(lv_obj_t * slider)

@@ -2,20 +2,19 @@
 
 import argparse
 import errno
-import glob
 import shutil
 import subprocess
 import sys
 import os
+from itertools import chain
 
 lvgl_test_dir = os.path.dirname(os.path.realpath(__file__))
 
 # Key values must match variable names in CMakeLists.txt.
 build_only_options = {
-    'OPTIONS_MINIMAL_MONOCHROME': 'Minimal config monochrome',
     'OPTIONS_NORMAL_8BIT': 'Normal config, 8 bit color depth',
     'OPTIONS_16BIT': 'Minimal config, 16 bit color depth',
-    'OPTIONS_16BIT_SWAP': 'Normal config, 16 bit color depth swapped',
+    'OPTIONS_24BIT': 'Normal config, 24 bit color depth',
     'OPTIONS_FULL_32BIT': 'Full config, 32 bit color depth',
 }
 
@@ -23,10 +22,6 @@ test_options = {
     'OPTIONS_TEST_SYSHEAP': 'Test config, system heap, 32 bit color depth',
     'OPTIONS_TEST_DEFHEAP': 'Test config, LVGL heap, 32 bit color depth',
 }
-
-
-def is_valid_option_name(option_name):
-    return option_name in build_only_options or option_name in test_options
 
 
 def get_option_description(option_name):
@@ -41,22 +36,6 @@ def delete_dir_ignore_missing(dir_path):
         shutil.rmtree(dir_path)
     except FileNotFoundError:
         pass
-
-
-def generate_test_runners():
-    '''Generate the test runner source code.'''
-    global lvgl_test_dir
-    os.chdir(lvgl_test_dir)
-    delete_dir_ignore_missing('src/test_runners')
-    os.mkdir('src/test_runners')
-
-    # TODO: Intermediate files should be in the build folders, not alongside
-    #       the other repo source.
-    for f in glob.glob("./src/test_cases/test_*.c"):
-        r = f[:-2] + "_Runner.c"
-        r = r.replace("/test_cases/", "/test_runners/")
-        subprocess.check_call(['ruby', 'unity/generate_test_runner.rb',
-                               f, r, 'config.yml'])
 
 
 def options_abbrev(options_name):
@@ -111,7 +90,7 @@ def build_tests(options_name, build_type, clean):
                            '--parallel', str(os.cpu_count())])
 
 
-def run_tests(options_name):
+def run_tests(options_name, test_suite):
     '''Run the tests for the given options name.'''
 
     print()
@@ -122,8 +101,15 @@ def run_tests(options_name):
     print('=' * len(label), flush=True)
 
     os.chdir(get_build_dir(options_name))
-    subprocess.check_call(
-        ['ctest', '--timeout', '30', '--parallel', str(os.cpu_count()), '--output-on-failure'])
+    args = [
+        'ctest',
+        '--timeout', '300',
+        '--parallel', str(os.cpu_count()),
+        '--output-on-failure',
+    ]
+    if test_suite is not None:
+        args.extend(["--tests-regex", test_suite])
+    subprocess.check_call(args)
 
 
 def generate_code_coverage_report():
@@ -162,6 +148,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Build and/or run LVGL tests.', epilog=epilog)
     parser.add_argument('--build-options', nargs=1,
+                        choices=list(chain(build_only_options, test_options)),
                         help='''the build option name to build or run. When
                         omitted all build configurations are used.
                         ''')
@@ -171,6 +158,8 @@ if __name__ == "__main__":
                         help='generate code coverage report for tests.')
     parser.add_argument('actions', nargs='*', choices=['build', 'test'],
                         help='build: compile build tests, test: compile/run executable tests.')
+    parser.add_argument('--test-suite', default=None,
+                        help='select test suite to run')
 
     args = parser.parse_args()
 
@@ -185,20 +174,13 @@ if __name__ == "__main__":
         else:
             options_to_build = test_options
 
-    for opt in options_to_build:
-        if not is_valid_option_name(opt):
-            print('Invalid build option "%s"' % opt, file=sys.stderr)
-            sys.exit(errno.EINVAL)
-
-    generate_test_runners()
-
     for options_name in options_to_build:
         is_test = options_name in test_options
         build_type = 'Debug'
         build_tests(options_name, build_type, args.clean)
         if is_test:
             try:
-                run_tests(options_name)
+                run_tests(options_name, args.test_suite)
             except subprocess.CalledProcessError as e:
                 sys.exit(e.returncode)
 

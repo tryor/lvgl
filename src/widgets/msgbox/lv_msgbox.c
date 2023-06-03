@@ -87,7 +87,7 @@ lv_obj_t * lv_msgbox_create(lv_obj_t * parent, const char * title, const char * 
 
     lv_obj_set_flex_flow(obj, LV_FLEX_FLOW_ROW_WRAP);
 
-    bool has_title = title && strlen(title) > 0;
+    bool has_title = title && lv_strlen(title) > 0;
 
     /*When a close button is required, we need the empty label as spacer to push the button to the right*/
     if(add_close_btn || has_title) {
@@ -101,7 +101,7 @@ lv_obj_t * lv_msgbox_create(lv_obj_t * parent, const char * title, const char * 
     if(add_close_btn) {
         mbox->close_btn = lv_btn_create(obj);
         lv_obj_set_ext_click_area(mbox->close_btn, LV_DPX(10));
-        lv_obj_add_event_cb(mbox->close_btn, msgbox_close_click_event_cb, LV_EVENT_CLICKED, NULL);
+        lv_obj_add_event(mbox->close_btn, msgbox_close_click_event_cb, LV_EVENT_CLICKED, NULL);
         lv_obj_t * label = lv_label_create(mbox->close_btn);
         lv_label_set_text(label, LV_SYMBOL_CLOSE);
         const lv_font_t * font = lv_obj_get_style_text_font(mbox->close_btn, LV_PART_MAIN);
@@ -111,8 +111,11 @@ lv_obj_t * lv_msgbox_create(lv_obj_t * parent, const char * title, const char * 
     }
 
     mbox->content = lv_obj_class_create_obj(&lv_msgbox_content_class, obj);
+    LV_ASSERT_MALLOC(obj);
+    if(mbox->content == NULL) return NULL;
+    lv_obj_class_init_obj(mbox->content);
 
-    bool has_txt = txt && strlen(txt) > 0;
+    bool has_txt = txt && lv_strlen(txt) > 0;
     if(has_txt) {
         mbox->text = lv_label_create(mbox->content);
         lv_label_set_text(mbox->text, txt);

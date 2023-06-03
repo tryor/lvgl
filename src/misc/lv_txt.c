@@ -108,7 +108,7 @@ void lv_txt_get_size(lv_point_t * size_res, const char * text, const lv_font_t *
         new_line_start += _lv_txt_get_next_line(&text[line_start], font, letter_space, max_width, NULL, flag);
 
         if((unsigned long)size_res->y + (unsigned long)letter_height + (unsigned long)line_space > LV_MAX_OF(lv_coord_t)) {
-            LV_LOG_WARN("lv_txt_get_size: integer overflow while calculating text height");
+            LV_LOG_WARN("integer overflow while calculating text height");
             return;
         }
         else {
@@ -224,6 +224,12 @@ static uint32_t lv_txt_get_next_word(const char * txt, const lv_font_t * font,
              *Must do this here in case first letter is a break character.*/
             if(i == 0 && break_index == NO_BREAK_FOUND && word_w_ptr != NULL) *word_w_ptr = cur_w;
             word_len--;
+            break;
+        }
+        else if(_lv_txt_is_a_word(letter_next) || _lv_txt_is_a_word(letter)) {
+            /*Found a word for single letter, usually true for CJK*/
+            *word_w_ptr = cur_w;
+            i = i_next;
             break;
         }
 
@@ -414,8 +420,8 @@ void _lv_txt_ins(char * txt_buf, uint32_t pos, const char * ins_txt)
 {
     if(txt_buf == NULL || ins_txt == NULL) return;
 
-    size_t old_len = strlen(txt_buf);
-    size_t ins_len = strlen(ins_txt);
+    size_t old_len = lv_strlen(txt_buf);
+    size_t ins_len = lv_strlen(ins_txt);
     if(ins_len == 0) return;
 
     size_t new_len = ins_len + old_len;
@@ -435,7 +441,7 @@ void _lv_txt_cut(char * txt, uint32_t pos, uint32_t len)
 {
     if(txt == NULL) return;
 
-    size_t old_len = strlen(txt);
+    size_t old_len = lv_strlen(txt);
 
     pos = _lv_txt_encoded_get_byte_id(txt, pos); /*Convert to byte index instead of letter index*/
     len = _lv_txt_encoded_get_byte_id(&txt[pos], len);
@@ -482,7 +488,6 @@ char * _lv_txt_set_text_vfmt(const char * fmt, va_list ap)
     if(text == NULL) {
         return NULL;
     }
-    text[len] = 0; /*Ensure NULL termination*/
 
     lv_vsnprintf(text, len + 1, fmt, ap);
 #endif
@@ -855,7 +860,7 @@ static uint32_t lv_txt_iso8859_1_get_char_id(const char * txt, uint32_t byte_id)
  */
 static uint32_t lv_txt_iso8859_1_get_length(const char * txt)
 {
-    return strlen(txt);
+    return lv_strlen(txt);
 }
 #else
 

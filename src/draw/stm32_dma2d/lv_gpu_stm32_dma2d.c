@@ -88,7 +88,7 @@ void lv_draw_stm32_dma2d_init(void)
 }
 
 
-void lv_draw_stm32_dma2d_ctx_init(lv_disp_drv_t * drv, lv_draw_ctx_t * draw_ctx)
+void lv_draw_stm32_dma2d_ctx_init(lv_disp_t * disp, lv_draw_ctx_t * draw_ctx)
 {
 
     lv_draw_sw_init_ctx(drv, draw_ctx);
@@ -102,9 +102,9 @@ void lv_draw_stm32_dma2d_ctx_init(lv_disp_drv_t * drv, lv_draw_ctx_t * draw_ctx)
 
 }
 
-void lv_draw_stm32_dma2d_ctx_deinit(lv_disp_drv_t * drv, lv_draw_ctx_t * draw_ctx)
+void lv_draw_stm32_dma2d_ctx_deinit(lv_disp_t * disp, lv_draw_ctx_t * draw_ctx)
 {
-    LV_UNUSED(drv);
+    LV_UNUSED(disp);
     LV_UNUSED(draw_ctx);
 }
 
@@ -139,7 +139,10 @@ void lv_draw_stm32_dma2d_blend(lv_draw_ctx_t * draw_ctx, const lv_draw_sw_blend_
         }
     }
 
-    if(!done) lv_draw_sw_blend_basic(draw_ctx, dsc);
+    if(!done) {
+        lv_draw_sw_blend_basic(draw_ctx, dsc);
+        invalidate_cache();
+    }
 }
 
 void lv_draw_stm32_dma2d_buffer_copy(lv_draw_ctx_t * draw_ctx,

@@ -14,6 +14,7 @@ extern "C" {
  *      INCLUDES
  *********************/
 #include "../../core/lv_obj.h"
+#include "../../core/lv_theme.h"
 
 #if LV_USE_THEME_MONO
 
@@ -31,8 +32,8 @@ extern "C" {
 
 /**
  * Initialize the theme
- * @param color_primary the primary color of the theme
- * @param color_secondary the secondary color for the theme
+ * @param disp pointer to display
+ * @param dark_bg
  * @param font pointer to a font to use.
  * @return a pointer to reference this theme later
  */

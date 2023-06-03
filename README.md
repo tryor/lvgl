@@ -3,7 +3,7 @@ The last stable version is available in the [release/v8.3](https://github.com/lv
 
 ---
 
-<a href="https://opencollective.com/lvgl" target="_blank"><img align="left" src="https://lvgl.io/assets/images/sponsor.png" height="32px"></a>
+<a href="https://github.com/sponsors/lvgl" target="_blank"><img align="left" src="https://lvgl.io/assets/images/sponsor.png" height="32px"></a>
 
 <p align="right">
   <b>English</b> | <a href="./docs/README_zh.md">中文</a> | <a href="./docs/README_pt_BR.md">Português do Brasil</a> | <a href="./docs/README_jp.md">日本語</a>
@@ -47,7 +47,6 @@ SquareLine Studio is a professional yet affordable drag and drop UI editor for L
 **Services**<br>
 Our team is ready to help you with graphics design, UI implementation and consulting services. Contact us if you need some support during the development of your next GUI project.
 
-
 ## :rocket: Features
 
 **Free and Portable**
@@ -66,7 +65,7 @@ Our team is ready to help you with graphics design, UI implementation and consul
   - Word wrapping, kerning, text scrolling, sub-pixel rendering, Pinyin-IME Chinese input, Emojis in texts.
   - Rendering engine supporting animations, anti-aliasing, opacity, smooth scrolling, shadows, image transformation, etc  
   - Supports Mouse, Touchpad, Keypad, Keyboard, External buttons, Encoder [Input devices](https://docs.lvgl.io/master/porting/indev.html).
-  - [Multiple display](https://docs.lvgl.io/master/overview/display.html) support.
+  - [Multiple display](https://docs.lvgl.io/master/overview/disp.html#multiple-display-support) support.
 
 **Binding and Build Support**
   - [Micropython Binding](https://blog.lvgl.io/2019-02-20/micropython-bindings) exposes LVGL API
@@ -83,16 +82,16 @@ Our team is ready to help you with graphics design, UI implementation and consul
 
 ## :heart: Sponsor
 
-If LVGL saved you a lot of time and money or you just had fun using it, consider [Supporting its Development](https://opencollective.com/lvgl).
+If LVGL saved you a lot of time and money or you just had fun using it, consider [Supporting its Development](https://github.com/sponsors/lvgl).
 
 **How do we spend the donations?**<br>
 Our goal is to provide financial compensation for people who do the most for LVGL. It means not only the maintainers but anyone who implements a great feature should get a payment from the accumulated money. We use the donations to cover our operational costs like servers and related services.
 
 **How to donate?**<br>
-We use [Open Collective](https://opencollective.com/lvgl) where you can easily send one time or recurring donations. You can also see all of our expenses  in a transparent way. 
+We use [GitHub Sponsors](https://github.com/sponsors/lvgl) where you can easily send one time or recurring donations. You can also see all of our expenses  in a transparent way.
 
 **How to get paid for your contribution?**<br>
-If someone implements or fixes an issue labeled as [Sponsored](https://github.com/lvgl/lvgl/labels/Sponsored) he or she will get a payment for that work. We estimate the required time, complexity and importance of the issue and set a price accordingly. To jump in just comment on a [Sponsored](https://github.com/lvgl/lvgl/labels/Sponsored) issue saying "Hi, I'd like to deal with it. This is how I'm planning to fix/implement it...". A work is considered ready when it's approved and merged by a maintainer. After that you can submit and expense at [opencollective.com](https://opencollective.com/lvgl) and you will receive teh payment in a few days.
+If someone implements or fixes an issue labeled as [Sponsored](https://github.com/lvgl/lvgl/labels/Sponsored) he or she will get a payment for that work. We estimate the required time, complexity and importance of the issue and set a price accordingly. To jump in just comment on a [Sponsored](https://github.com/lvgl/lvgl/labels/Sponsored) issue saying "Hi, I'd like to deal with it. This is how I'm planning to fix/implement it...". A work is considered ready when it's approved and merged by a maintainer. After that you can submit and expense at [opencollective.com](https://opencollective.com/lvgl) and you will receive the payment in a few days.
 
 **Organizations supporting LVGL**<br>
 [![Sponsors of LVGL](https://opencollective.com/lvgl/organizations.svg?width=600)](https://opencollective.com/lvgl)
@@ -109,8 +108,9 @@ LVGL is available as:
 - [NXP MCUXpresso component](https://www.nxp.com/design/software/embedded-software/lvgl-open-source-graphics-library:LITTLEVGL-OPEN-SOURCE-GRAPHICS-LIBRARY)
 - [NuttX library](https://docs.lvgl.io/master/get-started/os/nuttx.html)
 - [RT-Thread RTOS](https://docs.lvgl.io/master/get-started/os/rt-thread.html)
-- NXP MCUXpresso library
 - CMSIS-Pack
+- [RIOT OS package](https://doc.riot-os.org/group__pkg__lvgl.html#details)
+
 
 ## :robot: Examples
 
@@ -118,9 +118,46 @@ See some examples of creating widgets, using layouts and applying styles. You wi
 
 For more examples check out the [Examples](https://github.com/lvgl/lvgl/tree/master/examples) folder.
 
+
+### Hello world label
+
+![Simple Hello world label example in LVGL](https://github.com/kisvegabor/test/raw/master/readme_example_1.png)
+
+<details>
+  <summary>C code</summary>
+
+```c
+/*Change the active screen's background color*/
+lv_obj_set_style_bg_color(lv_scr_act(), lv_color_hex(0x003a57), LV_PART_MAIN);
+
+/*Create a white label, set its text and align it to the center*/
+lv_obj_t * label = lv_label_create(lv_scr_act());
+lv_label_set_text(label, "Hello world");
+lv_obj_set_style_text_color(lv_scr_act(), lv_color_hex(0xffffff), LV_PART_MAIN);
+lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+```
+</details>
+
+<details>
+  <summary>MicroPython code | <a href="https://sim.lvgl.io/v8.3/micropython/ports/javascript/index.html?script_direct=4ab7c40c35b0dc349aa2f0c3b00938d7d8e8ac9f" target="_blank">Online Simulator</a></summary>
+
+```python
+# Change the active screen's background color
+scr = lv.scr_act()
+scr.set_style_bg_color(lv.color_hex(0x003a57), lv.PART.MAIN)
+
+# Create a white label, set its text and align it to the center
+label = lv.label(lv.scr_act())
+label.set_text("Hello world")
+label.set_style_text_color(lv.color_hex(0xffffff), lv.PART.MAIN)
+label.align(lv.ALIGN.CENTER, 0, 0)
+```
+</details>
+<br>
+
 ### Button with Click Event
 
-![LVGL button with label example](https://github.com/kisvegabor/test/raw/master/readme_example_1.gif)
+![LVGL button with label example](https://github.com/kisvegabor/test/raw/master/readme_example_2.gif)
 
 <details>
   <summary>C code</summary>
@@ -129,7 +166,7 @@ For more examples check out the [Examples](https://github.com/lvgl/lvgl/tree/mas
 lv_obj_t * btn = lv_btn_create(lv_scr_act());                   /*Add a button to the current screen*/
 lv_obj_center(btn);                                             /*Set its position*/
 lv_obj_set_size(btn, 100, 50);                                  /*Set its size*/
-lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_CLICKED, NULL); /*Assign a callback to the button*/
+lv_obj_add_event(btn, btn_event_cb, LV_EVENT_CLICKED, NULL); /*Assign a callback to the button*/
 
 lv_obj_t * label = lv_label_create(btn);                        /*Add a label to the button*/
 lv_label_set_text(label, "Button");                             /*Set the labels text*/
@@ -154,7 +191,7 @@ def btn_event_cb(e):
 btn = lv.btn(lv.scr_act())
 btn.center()
 btn.set_size(100, 50)
-btn.add_event_cb(btn_event_cb, lv.EVENT.CLICKED, None)
+btn.add_event(btn_event_cb, lv.EVENT.CLICKED, None)
 
 label = lv.label(btn)
 label.set_text("Button")
@@ -164,7 +201,7 @@ label.center()
 <br>
 
 ### Checkboxes with Layout
-![Checkboxes with layout in LVGL](https://github.com/kisvegabor/test/raw/master/readme_example_2.gif)
+![Checkboxes with layout in LVGL](https://github.com/kisvegabor/test/raw/master/readme_example_3.gif)
 
 <details>
   <summary>C code</summary>
@@ -177,22 +214,22 @@ lv_obj_set_flex_align(lv_scr_act(), LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, L
 lv_obj_t * cb;
 cb = lv_checkbox_create(lv_scr_act());
 lv_checkbox_set_text(cb, "Apple");
-lv_obj_add_event_cb(cb, event_handler, LV_EVENT_ALL, NULL);
+lv_obj_add_event(cb, event_handler, LV_EVENT_ALL, NULL);
 
 cb = lv_checkbox_create(lv_scr_act());
 lv_checkbox_set_text(cb, "Banana");
 lv_obj_add_state(cb, LV_STATE_CHECKED);
-lv_obj_add_event_cb(cb, event_handler, LV_EVENT_ALL, NULL);
+lv_obj_add_event(cb, event_handler, LV_EVENT_ALL, NULL);
 
 cb = lv_checkbox_create(lv_scr_act());
 lv_checkbox_set_text(cb, "Lemon");
 lv_obj_add_state(cb, LV_STATE_DISABLED);
-lv_obj_add_event_cb(cb, event_handler, LV_EVENT_ALL, NULL);
+lv_obj_add_event(cb, event_handler, LV_EVENT_ALL, NULL);
 
 cb = lv_checkbox_create(lv_scr_act());
 lv_obj_add_state(cb, LV_STATE_CHECKED | LV_STATE_DISABLED);
 lv_checkbox_set_text(cb, "Melon\nand a new line");
-lv_obj_add_event_cb(cb, event_handler, LV_EVENT_ALL, NULL);
+lv_obj_add_event(cb, event_handler, LV_EVENT_ALL, NULL);
 ```
 
 </details>
@@ -203,7 +240,7 @@ lv_obj_add_event_cb(cb, event_handler, LV_EVENT_ALL, NULL);
 ```python
 def event_handler(e):
     code = e.get_code()
-    obj = e.get_target()
+    obj = e.get_target_obj()
     if code == lv.EVENT.VALUE_CHANGED:
         txt = obj.get_text()
         if obj.get_state() & lv.STATE.CHECKED:
@@ -218,29 +255,29 @@ lv.scr_act().set_flex_align(lv.FLEX_ALIGN.CENTER, lv.FLEX_ALIGN.START, lv.FLEX_A
 
 cb = lv.checkbox(lv.scr_act())
 cb.set_text("Apple")
-cb.add_event_cb(event_handler, lv.EVENT.ALL, None)
+cb.add_event(event_handler, lv.EVENT.ALL, None)
 
 cb = lv.checkbox(lv.scr_act())
 cb.set_text("Banana")
 cb.add_state(lv.STATE.CHECKED)
-cb.add_event_cb(event_handler, lv.EVENT.ALL, None)
+cb.add_event(event_handler, lv.EVENT.ALL, None)
 
 cb = lv.checkbox(lv.scr_act())
 cb.set_text("Lemon")
 cb.add_state(lv.STATE.DISABLED)
-cb.add_event_cb(event_handler, lv.EVENT.ALL, None)
+cb.add_event(event_handler, lv.EVENT.ALL, None)
 
 cb = lv.checkbox(lv.scr_act())
 cb.add_state(lv.STATE.CHECKED | lv.STATE.DISABLED)
 cb.set_text("Melon")
-cb.add_event_cb(event_handler, lv.EVENT.ALL, None)
+cb.add_event(event_handler, lv.EVENT.ALL, None)
 ```
 
 </details>
 <br>
 
 ### Styling a Slider
-![Styling a slider with LVGL](https://github.com/kisvegabor/test/raw/master/readme_example_3.gif)
+![Styling a slider with LVGL](https://github.com/kisvegabor/test/raw/master/readme_example_4.gif)
 
 
 <details>
@@ -268,7 +305,7 @@ lv_style_set_bg_grad_dir(&style_indicator, LV_GRAD_DIR_HOR);
 lv_style_set_shadow_color(&style_indicator, lv_color_hex(0x37B9F5));
 lv_style_set_shadow_width(&style_indicator, 15);
 lv_style_set_shadow_spread(&style_indicator, 5);
-
+4
 /*Add the style sheet to the slider's INDICATOR part*/
 lv_obj_add_style(slider, &style_indicator, LV_PART_INDICATOR);
 
@@ -328,7 +365,7 @@ slider.set_style_shadow_spread(2, lv.PART.KNOB)
 
 ### English, Hebrew (mixed LTR-RTL) and Chinese texts
 
-![English, Hebrew and Chinese texts with LVGL](https://github.com/kisvegabor/test/raw/master/readme_example_4.png)
+![English, Hebrew and Chinese texts with LVGL](https://github.com/kisvegabor/test/raw/master/readme_example_5.png)
 
 <details>
   <summary>C code</summary>

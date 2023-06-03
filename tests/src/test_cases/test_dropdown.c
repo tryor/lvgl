@@ -169,7 +169,7 @@ void test_dropdown_keypad(void)
     lv_obj_set_pos(dd1, 20, 20);
     lv_dropdown_set_options(dd1, "1\n2\n3\n4\n5\n6\n7\n8");
     lv_group_add_obj(g, dd1);
-    lv_obj_add_event_cb(dd1, dd_event, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event(dd1, dd_event, LV_EVENT_VALUE_CHANGED, NULL);
 
     lv_obj_t * dd2 = lv_dropdown_create(lv_scr_act());
     lv_obj_set_pos(dd2, 300, 20);
@@ -272,7 +272,7 @@ void test_dropdown_encoder(void)
     lv_obj_set_pos(dd1, 20, 20);
     lv_dropdown_set_options(dd1, "1\n2\n3\n4\n5\n6\n7\n8");
     lv_group_add_obj(g, dd1);
-    lv_obj_add_event_cb(dd1, dd_event, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event(dd1, dd_event, LV_EVENT_VALUE_CHANGED, NULL);
 
     lv_obj_t * dd2 = lv_dropdown_create(lv_scr_act());
     lv_obj_set_pos(dd2, 300, 20);
@@ -367,11 +367,11 @@ void test_dropdown_render_1(void)
 void test_dropdown_render_2(void)
 {
     lv_obj_clean(lv_scr_act());
-    LV_IMG_DECLARE(img_caret_down);
+    LV_IMG_DECLARE(test_img_caret_down);
     lv_obj_t * dd1 = lv_dropdown_create(lv_scr_act());
     lv_dropdown_set_text(dd1, "Short");
     lv_dropdown_set_options(dd1, "1\n2");
-    lv_dropdown_set_symbol(dd1, &img_caret_down);
+    lv_dropdown_set_symbol(dd1, &test_img_caret_down);
     lv_dropdown_open(dd1);
 
     lv_obj_t * dd2 = lv_dropdown_create(lv_scr_act());
@@ -439,6 +439,18 @@ void test_dropdown_should_list_on_top(void)
     lv_obj_t * list = lv_dropdown_get_list(dd);
     TEST_ASSERT_EQUAL_PTR(lv_scr_act(), lv_obj_get_parent(list));
     TEST_ASSERT_EQUAL_INT(2, lv_obj_get_index(list));
+}
+
+/* See #4191 */
+void test_dropdown_get_options_should_check_lengths(void)
+{
+    lv_obj_t * dd = lv_dropdown_create(lv_scr_act());
+    lv_dropdown_set_options(dd, "abc\nab");
+    TEST_ASSERT_EQUAL_INT(1, lv_dropdown_get_option_index(dd, "ab"));
+
+    lv_dropdown_set_options(dd, "Option 1\nOption 2\nOption 3\nOption");
+    TEST_ASSERT_EQUAL_INT(3, lv_dropdown_get_option_index(dd, "Option"));
+    TEST_ASSERT_EQUAL_INT(-1, lv_dropdown_get_option_index(dd, "Option "));
 }
 
 

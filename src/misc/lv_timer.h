@@ -73,15 +73,15 @@ LV_ATTRIBUTE_TIMER_HANDLER uint32_t lv_timer_handler(void);
  * Call it in the super-loop of main() or threads. It will run lv_timer_handler()
  * with a given period in ms. You can use it with sleep or delay in OS environment.
  * This function is used to simplify the porting.
- * @param __ms the period for running lv_timer_handler()
+ * @param period the period for running lv_timer_handler()
+ * @return the time after which it must be called again
  */
-static inline LV_ATTRIBUTE_TIMER_HANDLER uint32_t lv_timer_handler_run_in_period(uint32_t ms)
+static inline LV_ATTRIBUTE_TIMER_HANDLER uint32_t lv_timer_handler_run_in_period(uint32_t period)
 {
     static uint32_t last_tick = 0;
-    uint32_t curr_tick = lv_tick_get();
 
-    if((curr_tick - last_tick) >= (ms)) {
-        last_tick = curr_tick;
+    if(lv_tick_elaps(last_tick) >= period) {
+        last_tick = lv_tick_get();
         return lv_timer_handler();
     }
     return 1;
@@ -171,6 +171,16 @@ uint8_t lv_timer_get_idle(void);
  * @return the next timer or NULL if there is no more timer
  */
 lv_timer_t * lv_timer_get_next(lv_timer_t * timer);
+
+/**
+ * Get the user_data passed when the timer was created
+ * @param timer pointer to the lv_timer
+ * @return pointer to the user_data
+ */
+static inline void * lv_timer_get_user_data(lv_timer_t * timer)
+{
+    return timer->user_data;
+}
 
 /**********************
  *      MACROS

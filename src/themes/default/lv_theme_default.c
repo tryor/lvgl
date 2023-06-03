@@ -12,6 +12,7 @@
 
 #include "lv_theme_default.h"
 #include "../../misc/lv_gc.h"
+#include LV_COLOR_EXTERN_INCLUDE
 
 /*********************
  *      DEFINES
@@ -198,12 +199,13 @@ static lv_color_t dark_color_filter_cb(const lv_color_filter_dsc_t * f, lv_color
 static lv_color_t grey_filter_cb(const lv_color_filter_dsc_t * f, lv_color_t color, lv_opa_t opa)
 {
     LV_UNUSED(f);
-    if(theme.flags & MODE_DARK) return lv_color_mix(lv_palette_darken(LV_PALETTE_GREY, 2), color, opa);
-    else return lv_color_mix(lv_palette_lighten(LV_PALETTE_GREY, 2), color, opa);
+    if(theme.flags & MODE_DARK) return LV_COLOR_MIX(lv_palette_darken(LV_PALETTE_GREY, 2), color, opa);
+    else return LV_COLOR_MIX(lv_palette_lighten(LV_PALETTE_GREY, 2), color, opa);
 }
 
 static void style_init(void)
 {
+#if TRANSITION_TIME
     static const lv_style_prop_t trans_props[] = {
         LV_STYLE_BG_OPA, LV_STYLE_BG_COLOR,
         LV_STYLE_TRANSFORM_WIDTH, LV_STYLE_TRANSFORM_HEIGHT,
@@ -212,6 +214,7 @@ static void style_init(void)
         LV_STYLE_COLOR_FILTER_OPA, LV_STYLE_COLOR_FILTER_DSC,
         0
     };
+#endif
 
     color_scr = theme.flags & MODE_DARK ? DARK_COLOR_SCR : LIGHT_COLOR_SCR;
     color_text = theme.flags & MODE_DARK ? DARK_COLOR_TEXT : LIGHT_COLOR_TEXT;
@@ -1014,7 +1017,6 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj)
         lv_obj_add_style(obj, &styles->card, 0);
         lv_obj_add_style(obj, &styles->pad_zero, 0);
     }
-#endif
 
 #if LV_USE_CALENDAR_HEADER_ARROW
     else if(lv_obj_check_type(obj, &lv_calendar_header_arrow_class)) {
@@ -1026,6 +1028,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj)
     else if(lv_obj_check_type(obj, &lv_calendar_header_dropdown_class)) {
         lv_obj_add_style(obj, &styles->calendar_header, 0);
     }
+#endif
 #endif
 
 #if LV_USE_KEYBOARD
