@@ -1,7 +1,7 @@
 
 #include "../../lv_examples.h"
 
-#if LV_USE_TABLE && LV_USE_FILE_EXPLORER && (LV_USE_FS_STDIO || LV_USE_FS_POSIX || LV_USE_FS_WIN32 || LV_USE_FS_FATFS) && LV_BUILD_EXAMPLES
+#if LV_USE_TABLE && LV_USE_DROPDOWN && LV_USE_FILE_EXPLORER && (LV_USE_FS_STDIO || LV_USE_FS_POSIX || LV_USE_FS_WIN32 || LV_USE_FS_FATFS) && LV_BUILD_EXAMPLES
 
 #include <stdlib.h>
 #include <string.h>
@@ -14,21 +14,12 @@ static void file_explorer_event_handler(lv_event_t * e)
     if(code == LV_EVENT_VALUE_CHANGED) {
         const char * cur_path =  lv_file_explorer_get_current_path(obj);
         const char * sel_fn = lv_file_explorer_get_selected_file_name(obj);
-        uint16_t path_len = strlen(cur_path);
-        uint16_t fn_len = strlen(sel_fn);
 
-        if((path_len + fn_len) <= LV_FILE_EXPLORER_PATH_MAX_LEN) {
-            char file_info[LV_FILE_EXPLORER_PATH_MAX_LEN];
-
-            strcpy(file_info, cur_path);
-            strcat(file_info, sel_fn);
-
-            LV_LOG_USER("%s", file_info);
-        }
-        else    LV_LOG_USER("%s%s", cur_path, sel_fn);
+        LV_LOG_USER("%s%s", cur_path, sel_fn);
     }
 }
 
+#if LV_FILE_EXPLORER_QUICK_ACCESS
 static void btn_event_handler(lv_event_t * e)
 {
     lv_event_code_t code = lv_event_get_code(e);
@@ -39,7 +30,7 @@ static void btn_event_handler(lv_event_t * e)
         if(lv_obj_has_state(btn, LV_STATE_CHECKED))
             lv_obj_add_flag(file_explorer, LV_OBJ_FLAG_HIDDEN);
         else
-            lv_obj_clear_flag(file_explorer, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(file_explorer, LV_OBJ_FLAG_HIDDEN);
     }
 }
 
@@ -60,10 +51,11 @@ static void dd_event_handler(lv_event_t * e)
         }
     }
 }
+#endif
 
 void lv_example_file_explorer_2(void)
 {
-    lv_obj_t * file_explorer = lv_file_explorer_create(lv_scr_act());
+    lv_obj_t * file_explorer = lv_file_explorer_create(lv_screen_active());
 
 #if LV_USE_FS_WIN32
     lv_file_explorer_open_dir(file_explorer, "D:");
@@ -83,7 +75,7 @@ void lv_example_file_explorer_2(void)
     char * envvar = "HOME";
     char home_dir[LV_FS_MAX_PATH_LENGTH];
     strcpy(home_dir, "A:");
-    // get the user's home directory from the HOME enviroment variable
+    /* get the user's home directory from the HOME environment variable*/
     strcat(home_dir, getenv(envvar));
     LV_LOG_USER("home_dir: %s\n", home_dir);
     lv_file_explorer_set_quick_access_path(file_explorer, LV_EXPLORER_HOME_DIR, home_dir);
@@ -108,12 +100,13 @@ void lv_example_file_explorer_2(void)
 #endif
 #endif
 
-    lv_obj_add_event(file_explorer, file_explorer_event_handler, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(file_explorer, file_explorer_event_handler, LV_EVENT_ALL, NULL);
 
+#if LV_FILE_EXPLORER_QUICK_ACCESS
     /*Quick access status control button*/
     lv_obj_t * fe_quick_access_obj = lv_file_explorer_get_quick_access_area(file_explorer);
     lv_obj_t * fe_header_obj = lv_file_explorer_get_header(file_explorer);
-    lv_obj_t * btn = lv_btn_create(fe_header_obj);
+    lv_obj_t * btn = lv_button_create(fe_header_obj);
     lv_obj_set_style_radius(btn, 2, 0);
     lv_obj_set_style_pad_all(btn, 4, 0);
     lv_obj_align(btn, LV_ALIGN_LEFT_MID, 0, 0);
@@ -123,7 +116,7 @@ void lv_example_file_explorer_2(void)
     lv_label_set_text(label, LV_SYMBOL_LIST);
     lv_obj_center(label);
 
-    lv_obj_add_event(btn, btn_event_handler, LV_EVENT_VALUE_CHANGED, fe_quick_access_obj);
+    lv_obj_add_event_cb(btn, btn_event_handler, LV_EVENT_VALUE_CHANGED, fe_quick_access_obj);
 
     /*Sort control*/
     static const char * opts = "NONE\n"
@@ -135,9 +128,9 @@ void lv_example_file_explorer_2(void)
     lv_obj_set_size(dd, LV_PCT(30), LV_SIZE_CONTENT);
     lv_dropdown_set_options_static(dd, opts);
     lv_obj_align(dd, LV_ALIGN_RIGHT_MID, 0, 0);
-    //lv_obj_align_to(dd, btn, LV_ALIGN_OUT_RIGHT_MID, 0, 0);
 
-    lv_obj_add_event(dd, dd_event_handler, LV_EVENT_VALUE_CHANGED, file_explorer);
+    lv_obj_add_event_cb(dd, dd_event_handler, LV_EVENT_VALUE_CHANGED, file_explorer);
+#endif
 }
 
 #endif
